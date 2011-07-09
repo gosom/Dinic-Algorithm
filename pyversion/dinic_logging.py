@@ -50,10 +50,3 @@ def print_path(path):
                  (str([v['id'] for v in path['path']]), 
                   str(path['minflow'])))
 
-def print_corte(na):
-    corte = [1]
-    for k in na:
-        for v in na[k]:
-            if v['id'] not in corte:
-                corte.append(v['id'])
-    print("%s" % corte)

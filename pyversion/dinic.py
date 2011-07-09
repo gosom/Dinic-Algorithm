@@ -135,7 +135,7 @@ def dinic(edges):
 
     s = S
     na_num = 0
-    print_init()
+#    print_init()
     while True:
         for e in edges:
             e['used'] = False
@@ -143,20 +143,28 @@ def dinic(edges):
         na = data['na']
         na_num += 1
         complete = data['complete']
-        print_na(na, na_num)
+#        print_na(na, na_num)
         if not complete:
-            print_corte(na)
             break
         while True:
             path = get_path(na, edges)
             if path['complete']:
-                print_path(path)
+#                print_path(path)
                 augment(na, edges, path['path'], path['minflow'])
             else:
                 break
+    corte = get_corte(na)
+#    print_edges(edges)
+    return corte, sum([e['flow'] for e in edges if e['first'] == s])
 
-    print_edges(edges)
-    return sum([e['flow'] for e in edges if e['first'] == s])
+def get_corte(na):
+    corte = [1]
+    for k in na:
+        for v in na[k]:
+            if v['id'] not in corte:
+                corte.append(v['id'])
+    return corte
+
 
 
 def read_edges(f=sys.stdin):
@@ -176,9 +184,10 @@ def read_edges(f=sys.stdin):
 def run_dinic(file_name):
     f = open(file_name, "r")
     edges = read_edges(f)
-    maxflow = dinic(edges)
-    return maxflow
+    return dinic(edges)
+    
 
 if __name__ == "__main__":
-    maxflow = run_dinic(sys.argv[1])
+    corte, maxflow = run_dinic(sys.argv[1])
+    print(str(corte))
     print(maxflow)
