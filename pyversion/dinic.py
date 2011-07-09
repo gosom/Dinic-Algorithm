@@ -89,19 +89,27 @@ def get_path(na, edges):
             key = n['id']
             continue
 
-        if n['direction'] == 'F':
-            e = [e for e in edges if e['first'] == key and e['last'] == n['id']][0]
-            r = e['capacity'] - e['flow'] 
-            if r < minflow:
-                minflow = r
+        r = get_residual(n, key, edges)
 
-        if n['direction'] == 'B':
-            e = [e for e in edges if e['last'] == key and e['first'] == n['id']][0]
-            if e['flow'] < minflow:
-                minflow = e['flow']
+        if r < minflow:
+            minflow = r
         key = n['id']
                 
     return {'path':path, 'minflow':minflow, 'complete':complete}
+
+
+def get_residual(n, key, edges):
+    """ Return residual capacity of node."""
+
+    if n['direction'] == 'F':
+        e = [e for e in edges if e['first'] == key and e['last'] == n['id']][0]
+        r = e['capacity'] - e['flow'] 
+            
+    if n['direction'] == 'B':
+        e = [e for e in edges if e['last'] == key and e['first'] == n['id']][0]
+        r = e['flow']
+    return r
+
 
 def augment(na, edges, path, mincost):
     """Augment the flow in each edge from path by mincost."""
@@ -113,21 +121,25 @@ def augment(na, edges, path, mincost):
     while len(path) > 0:
         v = path.popleft()
         last = v['id']
-        if v['direction'] == 'F':
-            e = [e for e in edges if e['first'] == first and e['last'] == last][0]
-            e['flow'] += mincost
-            
-            if e['capacity'] - e['flow'] == 0:
-                na[e['first']] = [v for v in na[e['first']] if v['id'] != e['last']]
-
-        if v['direction'] == 'B':
-            e = [e for e in edges if e['last'] == first and e['first'] == last][0]
-            e['flow'] -= mincost
-            
-            if e['flow'] == 0:
-                na[e['last']] = [v for v in na[e['last']] if v['id'] != e['first']]
-
+        augment_and_delete(v, first, last, mincost, edges, na)
         first = last
+
+def augment_and_delete(v, first, last, mincost, edges, na):
+    """ Update flow in edges list for vertex v and delete edges without capacity """
+
+    if v['direction'] == 'F':
+        e = [e for e in edges if e['first'] == first and e['last'] == last][0]
+        e['flow'] += mincost
+            
+        if e['capacity'] - e['flow'] == 0:
+            na[e['first']] = [v for v in na[e['first']] if v['id'] != e['last']]
+
+    if v['direction'] == 'B':
+        e = [e for e in edges if e['last'] == first and e['first'] == last][0]
+        e['flow'] -= mincost
+            
+        if e['flow'] == 0:
+            na[e['last']] = [v for v in na[e['last']] if v['id'] != e['first']]
 
 
 def dinic(edges):
@@ -135,7 +147,7 @@ def dinic(edges):
 
     s = S
     na_num = 0
-#    print_init()
+    print_init()
     while True:
         for e in edges:
             e['used'] = False
@@ -143,18 +155,18 @@ def dinic(edges):
         na = data['na']
         na_num += 1
         complete = data['complete']
-#        print_na(na, na_num)
+        print_na(na, na_num)
         if not complete:
             break
         while True:
             path = get_path(na, edges)
             if path['complete']:
-#                print_path(path)
+                print_path(path)
                 augment(na, edges, path['path'], path['minflow'])
             else:
                 break
     corte = get_corte(na)
-#    print_edges(edges)
+    print_edges(edges)
     return corte, sum([e['flow'] for e in edges if e['first'] == s])
 
 def get_corte(na):
