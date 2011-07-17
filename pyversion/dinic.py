@@ -82,8 +82,8 @@ def get_path(na, edges):
         else:
             path.pop()
             n = path.pop()
-            path.append(n)
-            for k in na: # remove all nodes entering key
+            path.append(n) # WTF !!!
+            for k in na: # remove all edges entering key node
                 na[k] = [v for v in na[k] if v['id'] != key]
 
             key = n['id']
