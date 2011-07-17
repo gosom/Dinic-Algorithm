@@ -10,11 +10,14 @@
 
 
 edge get_edge(edges_list edges, int first, int last) {
-  int i = 0;
+  int i = 0, edge_length=0;
   edge e = NULL;
-
-  for (i = 0; i < g_slist_length(edges); i++) {
-    e = g_slist_nth_data(edges, i);
+  GSList * edge_data = NULL;
+  
+  edge_length = g_slist_length(edges);
+  edge_data = edges;
+  for (i = 0; i < edge_length; i++, edge_data=g_slist_next(edge_data)) {
+    e = edge_data->data;
     if (edge_first(e) == first 
 	&& edge_last(e) == last){
       return e;

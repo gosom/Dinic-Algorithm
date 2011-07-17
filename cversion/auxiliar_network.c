@@ -26,17 +26,16 @@ int * make_int(int n) {
 }
 
 gint compare_ints(gconstpointer n1, gconstpointer n2) {
-  if (*((int*)n1) == *((int*)n2))
-    return 0;
-  return -1;
+  return !(*((int*)n1) == *((int*)n2));
 }
 
 
 aux_net make_auxiliar_network(edges_list edges, bool *complete) {
   aux_net an = NULL;
-  int i = 0, level= 0, s=0, t=1;
+  int i = 0, level= 0, s=0, t=1, edges_length=0, r=0;
   edge e = NULL;
   vertex v = NULL;
+  GSList * edge_data = NULL;
   bool fordward = true, backward = false;
   GQueue * f_layer = NULL;
   GQueue * c_layer = NULL;
@@ -68,20 +67,24 @@ aux_net make_auxiliar_network(edges_list edges, bool *complete) {
 
     int key = *(int *)g_queue_pop_head(f_layer);
 
-    for (i=0; i < g_slist_length(edges); i++) {
-      e = g_slist_nth_data(edges, i);
+    edges_length = g_slist_length(edges); 
+    edge_data = edges;
+    for (i=0; i < edges_length; i++, edge_data=g_slist_next(edge_data)) { 
+
+      e = edge_data->data;
       if (edge_used(e)) continue;
-      int r = edge_capacity(e) - edge_flow(e);
+      r = edge_capacity(e) - edge_flow(e);
       if (key == edge_first(e) && r > 0)
 	v = make_vertex(edge_last(e), fordward);
       else if (key == edge_last(e) && edge_flow(e) > 0)
 	v = make_vertex(edge_first(e), backward);
+
       else continue;
       
-      GList * element = g_queue_find_custom(c_layer, 
+      GList * is_in_queue = g_queue_find_custom(c_layer, 
 				      make_int(vertex_id(v)), 
 				      &compare_ints);
-      if (NULL == element) {
+      if (NULL == is_in_queue) {
 	g_queue_push_tail(c_layer, make_int(vertex_id(v)));
       }
       int id = vertex_id(v);
@@ -94,7 +97,6 @@ aux_net make_auxiliar_network(edges_list edges, bool *complete) {
 	an_add_edge(an, key, v);
 	edge_set_used(e, true);
       }
-  
     }
     
     if (g_queue_is_empty(f_layer)) {

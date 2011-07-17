@@ -10,11 +10,14 @@
 
 
 void reset_edges(edges_list edges) {
-  int i = 0;
+  int i = 0, edges_length = 0;
   edge e = NULL;
-
-  for (i = 0; i < g_slist_length(edges); i++) {
-    e = g_slist_nth_data(edges, i);
+  GSList * edge_data = NULL;
+  
+  edges_length = g_slist_length(edges);
+  edge_data = edges;
+  for (i = 0; i < edges_length; i++, edge_data=g_slist_next(edge_data)) {
+    e = edge_data->data;
     edge_set_used(e, false);
   }
 }
@@ -63,7 +66,8 @@ int main(int argc, char ** argv) {
   path p = NULL;
   GSList * corte = NULL;
 
-  open_file("../pyversion/tests/networks/complex5000.txt");
+  open_file("../pyversion/tests/networks/complex5000.txt"); 
+  /*  open_file("../pyversion/tests/networks/net02.txt");*/
 
   edges = read_edges();
   /*print_edges(edges); */
