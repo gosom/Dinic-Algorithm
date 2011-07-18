@@ -3,11 +3,12 @@
 #include <assert.h>
 #include "auxiliar_network.h"
 #include "edge.h"
+#include "queue.h"
+#include "utils.h"
 
 void free_hash_row(gpointer data) {
   g_slist_free_full(data, (void (*) (gpointer)) destroy_vertex);
 }
-
 
 
 aux_net make_an() {
@@ -19,16 +20,6 @@ aux_net make_an() {
 }
 
 
-int * make_int(int n) {
-  int * r = malloc(sizeof(int));
-  *r = n;
-  return r;
-}
-
-gint compare_ints(gconstpointer n1, gconstpointer n2) {
-  return !(*((int*)n1) == *((int*)n2));
-}
-
 
 aux_net make_auxiliar_network(edges_list edges, bool *complete) {
   aux_net an = NULL;
@@ -37,8 +28,8 @@ aux_net make_auxiliar_network(edges_list edges, bool *complete) {
   vertex v = NULL;
   GSList * edge_data = NULL;
   bool fordward = true, backward = false;
-  GQueue * f_layer = NULL;
-  GQueue * c_layer = NULL;
+  queue f_layer = NULL;
+  queue c_layer = NULL;
   GHashTable * vertex_levels = NULL;
   int *l = NULL;
   
@@ -49,26 +40,26 @@ aux_net make_auxiliar_network(edges_list edges, bool *complete) {
   /* Creating Data Structures */
   
   an = make_an();
-  f_layer = g_queue_new();
-  c_layer = g_queue_new();
+  f_layer = queue_new();
+  c_layer = queue_new();
   vertex_levels = g_hash_table_new(g_int_hash, 
 				   g_int_equal);
   
   /* Initializing Data structures */
 
-  g_queue_push_tail(f_layer, make_int(s));
-  l = malloc(sizeof(int));
-  *l = level;
+  queue_push_tail(f_layer, make_int(s));
+  l = make_int(level);
   g_hash_table_insert(vertex_levels, make_int(s), l);
 
-  while (!g_queue_is_empty(f_layer)) {
+  while (!queue_is_empty(f_layer)) {
 
     /* Add new layer to auxiliar network */
 
-    int key = *(int *)g_queue_pop_head(f_layer);
+    int key = *(int *)queue_pop_head(f_layer);
 
     edges_length = g_slist_length(edges); 
     edge_data = edges;
+
     for (i=0; i < edges_length; i++, edge_data=g_slist_next(edge_data)) { 
 
       e = edge_data->data;
@@ -80,12 +71,9 @@ aux_net make_auxiliar_network(edges_list edges, bool *complete) {
 	v = make_vertex(edge_first(e), backward);
 
       else continue;
-      
-      GList * is_in_queue = g_queue_find_custom(c_layer, 
-				      make_int(vertex_id(v)), 
-				      &compare_ints);
-      if (NULL == is_in_queue) {
-	g_queue_push_tail(c_layer, make_int(vertex_id(v)));
+
+      if (!queue_has_node(c_layer, vertex_id(v))) {
+	queue_push_tail(c_layer, make_int(vertex_id(v)));
       }
       int id = vertex_id(v);
       if (g_hash_table_lookup(vertex_levels, &id) == NULL) {
@@ -99,15 +87,14 @@ aux_net make_auxiliar_network(edges_list edges, bool *complete) {
       }
     }
     
-    if (g_queue_is_empty(f_layer)) {
-      g_queue_free(f_layer);
+    if (queue_is_empty(f_layer)) {
+      queue_free(f_layer, free);
       f_layer = c_layer;
-      c_layer = g_queue_new();
+      c_layer = queue_new();
       level++;
     }
     
-    if (g_queue_find_custom(f_layer, make_int(t), 
-			    &compare_ints) != NULL) {
+    if (queue_has_node(f_layer, t)) {
       *complete = true;
       break;
     }

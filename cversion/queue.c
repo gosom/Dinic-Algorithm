@@ -1,8 +1,10 @@
+#include <stdlib.h>
 #include <assert.h>
 #include "glib.h"
 #include "queue.h"
+#include "utils.h"
 
-queue queue_new(queue q) {
+queue queue_new() {
   return g_queue_new();
 }
 
@@ -37,6 +39,17 @@ gpointer queue_peek_head(queue q) {
 
 gpointer queue_peek_tail(queue q) {
   return g_queue_peek_tail(q);
+}
+
+bool queue_has_node(queue q, int node) {
+  int * data = make_int(node);
+  bool r = false;
+  if (g_queue_find_custom(q, data, &compare_ints) 
+      != NULL) {
+    r = true;
+  }
+  free(data);
+  return r;
 }
 
 void queue_free(queue q, void (*free_data) (gpointer)) {

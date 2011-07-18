@@ -66,8 +66,8 @@ int main(int argc, char ** argv) {
   path p = NULL;
   GSList * corte = NULL;
 
-  open_file("../pyversion/tests/networks/complex5000.txt"); 
-  /*  open_file("../pyversion/tests/networks/net02.txt");*/
+  /*  open_file("../pyversion/tests/networks/complex5000.txt");  */
+  open_file("../pyversion/tests/networks/net02.txt");
 
   edges = read_edges();
   /*print_edges(edges); */
