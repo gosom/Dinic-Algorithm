@@ -32,7 +32,6 @@ aux_net make_auxiliar_network(edges_list edges, bool *complete) {
   queue c_layer = NULL;
   GHashTable * vertex_levels = NULL;
   
-  
   assert(edges != NULL);
   
   *complete = false;
@@ -88,7 +87,7 @@ aux_net make_auxiliar_network(edges_list edges, bool *complete) {
     }
     
     if (queue_is_empty(f_layer)) {
-      /*      queue_free(f_layer, free);*/
+      /* queue_free(f_layer, free);*/
       f_layer = c_layer;
       c_layer = queue_new();
       level++;
@@ -120,7 +119,6 @@ void an_print(aux_net an) {
   vertex v = NULL;
   
   g_hash_table_iter_init(&iter, an);
-  printf("UN ARBOLITO**************************\n");
   while (g_hash_table_iter_next(&iter, (gpointer) &key, (gpointer) &children)) {
     printf("key: %u\t", GPOINTER_TO_UINT(key));
 

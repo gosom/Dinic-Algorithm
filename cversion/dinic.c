@@ -73,8 +73,8 @@ int main(int argc, char ** argv) {
   path p = NULL;
   GSList * corte = NULL;
 
-  open_file("../pyversion/tests/networks/complex5000.txt"); 
-  /*   open_file("../pyversion/tests/networks/net02.txt");*/
+  /*  open_file("../pyversion/tests/networks/complex5000.txt"); */
+  open_file("../pyversion/tests/networks/net02.txt");
 
   edges = read_edges();
 
@@ -84,7 +84,6 @@ int main(int argc, char ** argv) {
 
     if (!an_complete) break;
     while (true) {
-
 
       p = get_path(an, edges, &minflow, 
 		   &path_complete);

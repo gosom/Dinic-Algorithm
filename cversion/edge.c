@@ -29,7 +29,6 @@ edge make_edge(guint first, guint last, guint capacity,
 
 void destroy_edge(edge e) {
   free(e);
-  e = NULL;
 }
 
 guint edge_first(edge e) {
