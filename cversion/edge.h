@@ -7,15 +7,15 @@ typedef struct sedge * edge;
 typedef queue edges_list;
 typedef void (*free_edge_func) (void*);
 
-edge make_edge(int first, int last, int capacity, 
-	       int flow, bool used);
+edge make_edge(guint first, guint last, guint capacity, 
+	       guint flow, bool used);
 
 void destroy_edge(edge e);
-int edge_first(edge e);
-int edge_last(edge e);
-int edge_capacity(edge e);
-int edge_flow(edge e);
-void update_flow(edge e, int flow);
+guint edge_first(edge e);
+guint edge_last(edge e);
+guint edge_capacity(edge e);
+guint edge_flow(edge e);
+void update_flow(edge e, guint flow);
 bool edge_used(edge e);
 void edge_set_used(edge e, bool used);
 void print_edge(edge e);

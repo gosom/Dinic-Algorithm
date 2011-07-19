@@ -9,7 +9,7 @@ queue queue_new() {
   return g_queue_new();
 }
 
-int queue_length(queue q) {
+guint queue_length(queue q) {
   return g_queue_get_length(q);
 }
 
@@ -42,14 +42,13 @@ gpointer queue_peek_tail(queue q) {
   return g_queue_peek_tail(q);
 }
 
-bool queue_has_node(queue q, int node) {
-  return (g_queue_find_custom(q, &node, &compare_ints) 
-	  != NULL);
+bool queue_has_node(queue q, guint node) {
+  return (g_queue_find(q, GUINT_TO_POINTER(node)) != NULL);
 }
 
 
-void  queue_delete_vertex(queue q, int id) {
-  int i = 0, length=0;
+void  queue_delete_vertex(queue q, guint id) {
+  guint i = 0, length=0;
   GList * vertex_list = NULL;
   vertex v = NULL;
 
@@ -71,9 +70,5 @@ void  queue_delete_vertex(queue q, int id) {
 
 void queue_free(queue q, void (*free_data) (gpointer)) {
   assert(q != NULL);
-  gpointer data = NULL;
-  while (!queue_is_empty(q)) {
-    data = queue_pop_tail(q);
-    free_data(data);
-  }
+  g_queue_free(q);
 }

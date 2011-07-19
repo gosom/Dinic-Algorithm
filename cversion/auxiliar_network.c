@@ -7,14 +7,14 @@
 #include "utils.h"
 
 void free_hash_row(gpointer data) {
-  g_slist_free_full(data, (void (*) (gpointer)) destroy_vertex);
+  queue_free(data, (void (*) (gpointer)) destroy_vertex);
 }
 
 
 aux_net make_an() {
   aux_net an = NULL;
 
-  an = g_hash_table_new(g_int_hash, g_int_equal);
+  an = g_hash_table_new(NULL, NULL);
   assert(an != NULL);
   return an;
 }
@@ -23,7 +23,7 @@ aux_net make_an() {
 
 aux_net make_auxiliar_network(edges_list edges, bool *complete) {
   aux_net an = NULL;
-  int i = 0, level= 0, s=0, t=1, edges_length=0, r=0;
+  guint i = 0, level= 1, s=0, t=1, edges_length=0, r=0;
   edge e = NULL;
   vertex v = NULL;
   GList * edge_data = NULL;
@@ -31,7 +31,6 @@ aux_net make_auxiliar_network(edges_list edges, bool *complete) {
   queue f_layer = NULL;
   queue c_layer = NULL;
   GHashTable * vertex_levels = NULL;
-  int *l = NULL;
   
   
   assert(edges != NULL);
@@ -42,20 +41,19 @@ aux_net make_auxiliar_network(edges_list edges, bool *complete) {
   an = make_an();
   f_layer = queue_new();
   c_layer = queue_new();
-  vertex_levels = g_hash_table_new(g_int_hash, 
-				   g_int_equal);
+  vertex_levels = g_hash_table_new(NULL, NULL);
   
   /* Initializing Data structures */
 
-  queue_push_tail(f_layer, make_int(s));
-  l = make_int(level);
-  g_hash_table_insert(vertex_levels, make_int(s), l);
-
+  queue_push_tail(f_layer, GUINT_TO_POINTER(s));
+  g_hash_table_insert(vertex_levels, GUINT_TO_POINTER(s), 
+		      GUINT_TO_POINTER(level));
+  level++;
   while (!queue_is_empty(f_layer)) {
 
     /* Add new layer to auxiliar network */
 
-    int key = *(int *)queue_pop_head(f_layer);
+    guint key = GPOINTER_TO_UINT(queue_pop_head(f_layer));
 
     edges_length = queue_length(edges); 
     edge_data = edges->head;
@@ -72,23 +70,25 @@ aux_net make_auxiliar_network(edges_list edges, bool *complete) {
 
       else continue;
 
-      if (!queue_has_node(c_layer, vertex_id(v))) {
-	queue_push_tail(c_layer, make_int(vertex_id(v)));
-      }
-      int id = vertex_id(v);
-      if (g_hash_table_lookup(vertex_levels, &id) == NULL) {
-	g_hash_table_insert(vertex_levels, make_int(id), make_int(level));
+      guint id = vertex_id(v);
+
+      if (!queue_has_node(c_layer, id)) {
+	queue_push_tail(c_layer, GUINT_TO_POINTER(id));
       }
 
-      int *level_tmp = g_hash_table_lookup(vertex_levels, &id);
-      if (*level_tmp == level) {
+      if (g_hash_table_lookup(vertex_levels, GUINT_TO_POINTER(id)) == NULL) {
+	g_hash_table_insert(vertex_levels, GUINT_TO_POINTER(id), GUINT_TO_POINTER(level));
+      }
+
+      gpointer level_tmp = g_hash_table_lookup(vertex_levels, GUINT_TO_POINTER(id));
+      if (GPOINTER_TO_UINT(level_tmp) == level) {
 	an_add_edge(an, key, v);
 	edge_set_used(e, true);
       }
     }
     
     if (queue_is_empty(f_layer)) {
-      queue_free(f_layer, free);
+      /*      queue_free(f_layer, free);*/
       f_layer = c_layer;
       c_layer = queue_new();
       level++;
@@ -114,20 +114,21 @@ void destroy_auxiliar_network(aux_net an) {
 
 void an_print(aux_net an) {
   GHashTableIter iter;
-  int * key = NULL, length = 0, i = 0;
+  guint * key = NULL, length = 0, i = 0;
   GList * children_data = NULL;
   queue children = NULL;
   vertex v = NULL;
   
   g_hash_table_iter_init(&iter, an);
+  printf("UN ARBOLITO**************************\n");
   while (g_hash_table_iter_next(&iter, (gpointer) &key, (gpointer) &children)) {
-    printf("key: %d\t", *key);
+    printf("key: %u\t", GPOINTER_TO_UINT(key));
 
     length = queue_length(children);
     children_data = children->head;
     for (i=0; i<length; i++, children_data=children_data->next) {
       v = children_data->data;
-      printf("id: %d\t", vertex_id(v));
+      printf("id: %u\t", vertex_id(v));
     }
 
     printf("\n");
@@ -135,50 +136,47 @@ void an_print(aux_net an) {
 }
 
 
-void an_add_edge(aux_net an, int key, vertex v) {
+void an_add_edge(aux_net an, guint key, vertex v) {
   assert(an != NULL);
   assert(v != NULL);
 
   queue vertex_list = NULL;
-  int * pkey = malloc(sizeof(int));
-  *pkey = key;
-  vertex_list = g_hash_table_lookup(an, pkey);
+  vertex_list = g_hash_table_lookup(an, GUINT_TO_POINTER(key));
   if (vertex_list == NULL) {
     vertex_list = queue_new();
     queue_push_tail(vertex_list, v);
-    g_hash_table_insert(an, pkey, vertex_list);
+    g_hash_table_insert(an, GUINT_TO_POINTER(key), vertex_list);
   } else {
     queue_push_tail(vertex_list, v);
   }
 }
 
 
-void an_remove_edge(aux_net an, int key, int vid) {
+void an_remove_edge(aux_net an, guint key, guint id) {
   assert(an != NULL);
   
   queue vertex_list = NULL;
-  GSList * v = NULL;
-  vertex_list = g_hash_table_lookup(an, make_int(key));
+  vertex_list = g_hash_table_lookup(an, GUINT_TO_POINTER(key));
   assert(vertex_list != NULL);
-  queue_delete_vertex(vertex_list, vid);
+  queue_delete_vertex(vertex_list, id);
 }
 
 
-vertex an_get_child(aux_net an, int father) {
+vertex an_get_child(aux_net an, guint father) {
   queue children = NULL;
   vertex v = NULL;
   
   assert(an != NULL);
 
-  children = g_hash_table_lookup(an, &father);
+  children = g_hash_table_lookup(an, GUINT_TO_POINTER(father));
   
   if (children != NULL)
-    v = queue_pop_head(children);
+    v = queue_peek_head(children);
 
   return v;
 }
 
-void an_remove_edges_entering(aux_net an, int key) {
+void an_remove_edges_entering(aux_net an, guint key) {
   assert(an != NULL);
   
   GHashTableIter iter;

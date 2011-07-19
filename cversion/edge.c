@@ -7,16 +7,16 @@
 
 
 struct sedge {
-  int first;
-  int last;
-  int capacity;
-  int flow;
+  guint first;
+  guint last;
+  guint capacity;
+  guint flow;
   bool used;
 };
 
 
-edge make_edge(int first, int last, int capacity, 
-	       int flow, bool used) {
+edge make_edge(guint first, guint last, guint capacity, 
+	       guint flow, bool used) {
   edge e = malloc(sizeof(struct sedge));
   e->first = first;
   e->last = last;
@@ -32,23 +32,23 @@ void destroy_edge(edge e) {
   e = NULL;
 }
 
-int edge_first(edge e) {
+guint edge_first(edge e) {
   return e->first;
 }
 
-int edge_last(edge e) {
+guint edge_last(edge e) {
   return e->last;
 }
 
-int edge_capacity(edge e) {
+guint edge_capacity(edge e) {
   return e->capacity;
 }
 
-int edge_flow(edge e) {
+guint edge_flow(edge e) {
   return e->flow;
 }
 
-void update_flow(edge e, int flow) {
+void update_flow(edge e, guint flow) {
   e->flow = flow;
 }
 
@@ -57,7 +57,7 @@ bool edge_used(edge e) {
 }
 
 void print_edge(edge e) {
-  printf("%d %d %d %d %s\n", 
+  printf("%u %u %u %u %s\n", 
 	 edge_first(e), 
 	 edge_last(e),
 	 edge_capacity(e),
@@ -73,12 +73,12 @@ void edge_set_used(edge e, bool used) {
 
 
 edges_list read_edges() {
-  int first = 0, last = 0, capacity = 0;
+  guint first = 0, last = 0, capacity = 0;
   edge e = NULL;
   edges_list edges = NULL;
 
   edges = queue_new();
-  while(scanf("%d %d %d\n", 
+  while(scanf("%u %u %u\n", 
 	      &first, &last, &capacity) != EOF){
     e = make_edge(first, last, capacity, 0, false);
     queue_push_tail(edges, e);
@@ -88,7 +88,7 @@ edges_list read_edges() {
 
 
 void print_edges(edges_list edges) {
-  int i, length=0;
+  guint i, length=0;
   GList *e = NULL;
   
   length = queue_length(edges);

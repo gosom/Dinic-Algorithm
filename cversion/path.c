@@ -8,8 +8,8 @@
 #include "path.h"
 
 
-edge get_edge(edges_list edges, int first, int last) {
-  int i = 0, edge_length=0;
+edge get_edge(edges_list edges, guint first, guint last) {
+  guint i = 0, edge_length=0;
   edge e = NULL;
   GList * edge_data = NULL;
   
@@ -25,10 +25,10 @@ edge get_edge(edges_list edges, int first, int last) {
   return NULL;
 }
 
-int get_residual_capacity(int father, vertex child, 
+guint get_residual_capacity(guint father, vertex child, 
 			  edges_list edges) {
   edge e = NULL;
-  int r = 0;
+  guint r = 0;
   assert(edges != NULL);
 
   if (vertex_direction(child) == true) { /* Fordward */
@@ -47,14 +47,14 @@ int get_residual_capacity(int father, vertex child,
 
 
 path get_path(aux_net an, edges_list edges, 
-	      int * minflow, bool * complete) {
+	      guint * minflow, bool * complete) {
   
   path p = NULL;
-  int s = 0, t = 1, r = 0;
+  guint s = 0, t = 1, r = 0;
   vertex n = NULL;
-  int key = 0; /* s node */
+  guint key = 0; /* s node */
   
-  *minflow = INT_MAX;
+  *minflow = G_MAXUINT;
   *complete = false;
   n = make_vertex(s, true); /* Source Node (s)*/
   p = queue_new();
@@ -89,8 +89,8 @@ path get_path(aux_net an, edges_list edges,
 
 
 void augment_and_delete(aux_net an, edges_list edges,
-			vertex v, int first, int last, 
-			int mincost) {
+			vertex v, guint first, guint last, 
+			guint mincost) {
   edge e = NULL;
 
   assert(v != NULL);
@@ -113,10 +113,10 @@ void augment_and_delete(aux_net an, edges_list edges,
 
 
 void augment(aux_net an, edges_list edges, 
-	     path p, int mincost) {
+	     path p, guint mincost) {
   
-  int first = 0; /* s is the first node in the path */
-  int last = 0;
+  guint first = 0; /* s is the first node in the path */
+  guint last = 0;
   vertex v = NULL;
 
   assert(an != NULL);
@@ -137,7 +137,7 @@ void augment(aux_net an, edges_list edges,
 
 
 void print_path(path p) {
-  int i = 0, length = 0;
+  guint i = 0, length = 0;
   vertex v = NULL;
   GList * vertex_list = NULL;
 
@@ -146,7 +146,7 @@ void print_path(path p) {
   for (i = 0; i < length; i++, 
 	 vertex_list=vertex_list->next) {
     v = vertex_list->data;
-    printf("%d ", vertex_id(v));
+    printf("%u ", vertex_id(v));
   }
   printf("\n");
 }
