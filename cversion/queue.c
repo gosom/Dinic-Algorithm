@@ -66,9 +66,11 @@ void  queue_delete_vertex(queue q, guint id) {
 }
 
 
-
-
 void queue_free(queue q, void (*free_data) (gpointer)) {
   assert(q != NULL);
   g_queue_free(q);
+}
+
+void queue_clear(queue q) {
+  g_queue_clear(q);
 }

@@ -12,13 +12,8 @@ void free_hash_row(gpointer data) {
 
 
 aux_net make_an() {
-  aux_net an = NULL;
-
-  an = g_hash_table_new(NULL, NULL);
-  assert(an != NULL);
-  return an;
+  return g_hash_table_new(NULL, NULL);
 }
-
 
 
 aux_net make_auxiliar_network(edges_list edges, bool *complete) {
@@ -30,6 +25,7 @@ aux_net make_auxiliar_network(edges_list edges, bool *complete) {
   bool fordward = true, backward = false;
   queue f_layer = NULL;
   queue c_layer = NULL;
+  queue tmp_queue = NULL;
   GHashTable * vertex_levels = NULL;
   
   assert(edges != NULL);
@@ -57,7 +53,7 @@ aux_net make_auxiliar_network(edges_list edges, bool *complete) {
     edges_length = queue_length(edges); 
     edge_data = edges->head;
 
-    for (i=0; i < edges_length; i++, edge_data=edge_data->next) { 
+    for (i=0; i < edges_length && !*complete; i++, edge_data=edge_data->next) { 
 
       e = edge_data->data;
       if (edge_used(e)) continue;
@@ -73,13 +69,16 @@ aux_net make_auxiliar_network(edges_list edges, bool *complete) {
 
       if (!queue_has_node(c_layer, id)) {
 	queue_push_tail(c_layer, GUINT_TO_POINTER(id));
+	if (id == t) *complete = true;
       }
-
-      if (g_hash_table_lookup(vertex_levels, GUINT_TO_POINTER(id)) == NULL) {
-	g_hash_table_insert(vertex_levels, GUINT_TO_POINTER(id), GUINT_TO_POINTER(level));
-      }
-
+      
       gpointer level_tmp = g_hash_table_lookup(vertex_levels, GUINT_TO_POINTER(id));
+
+      if (level_tmp == NULL) {
+	level_tmp = GUINT_TO_POINTER(level);
+	g_hash_table_insert(vertex_levels, GUINT_TO_POINTER(id), level_tmp);
+      }
+
       if (GPOINTER_TO_UINT(level_tmp) == level) {
 	an_add_edge(an, key, v);
 	edge_set_used(e, true);
@@ -87,17 +86,12 @@ aux_net make_auxiliar_network(edges_list edges, bool *complete) {
     }
     
     if (queue_is_empty(f_layer)) {
-      /* queue_free(f_layer, free);*/
+      queue_clear(f_layer);
+      tmp_queue = f_layer;
       f_layer = c_layer;
-      c_layer = queue_new();
+      c_layer = tmp_queue;
       level++;
     }
-    
-    if (queue_has_node(f_layer, t)) {
-      *complete = true;
-      break;
-    }
-
   }
 
   return an;

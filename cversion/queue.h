@@ -19,5 +19,6 @@ gpointer queue_peek_tail(queue q);
 bool queue_has_node(queue q, guint vertex_id);
 void queue_delete_vertex(queue q, guint vertex_id);
 void queue_free(queue q, void (*free_data) (gpointer));
+void queue_clear(queue q);
 
 #endif
