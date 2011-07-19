@@ -12,11 +12,11 @@
 void reset_edges(edges_list edges) {
   int i = 0, edges_length = 0;
   edge e = NULL;
-  GSList * edge_data = NULL;
+  GList * edge_data = NULL;
   
-  edges_length = g_slist_length(edges);
-  edge_data = edges;
-  for (i = 0; i < edges_length; i++, edge_data=g_slist_next(edge_data)) {
+  edges_length = queue_length(edges);
+  edge_data = edges->head;
+  for (i = 0; i < edges_length; i++, edge_data=edge_data->next) {
     e = edge_data->data;
     edge_set_used(e, false);
   }
@@ -44,11 +44,14 @@ GSList * get_corte(aux_net an) {
 }
 
 int calculate_maxflow(edges_list edges) {
-  int maxflow = 0, i = 0, s = 0;
+  int maxflow = 0, i = 0, s = 0, length=0;
+  GList * edge_data = NULL;
   edge e = NULL;
 
-  for (i = 0; i < g_slist_length(edges); i++) {
-    e = g_slist_nth_data(edges, i);
+  length = queue_length(edges);
+  edge_data = edges->head;
+  for (i = 0; i < length; i++, edge_data=edge_data->next) {
+    e = edge_data->data;
     if (edge_first(e) == s) {
       maxflow += edge_flow(e);
     }
@@ -66,8 +69,8 @@ int main(int argc, char ** argv) {
   path p = NULL;
   GSList * corte = NULL;
 
-  /*  open_file("../pyversion/tests/networks/complex5000.txt");  */
-  open_file("../pyversion/tests/networks/net02.txt");
+  /*  open_file("../pyversion/tests/networks/complex5000.txt"); */
+    open_file("../pyversion/tests/networks/net02.txt");
 
   edges = read_edges();
   /*print_edges(edges); */

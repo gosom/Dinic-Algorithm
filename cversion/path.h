@@ -2,8 +2,9 @@
 #define PATH_H
 
 #include "auxiliar_network.h"
+#include "edge.h"
 
-typedef GQueue * path;
+typedef queue path;
 
 
 

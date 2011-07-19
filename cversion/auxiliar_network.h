@@ -2,8 +2,9 @@
 #define AUXILIAR_NETWORK_
 
 #include "glib.h"
-#include "parser.h"
+#include "edge.h"
 #include "vertex.h"
+
 
 typedef GHashTable * aux_net;
 

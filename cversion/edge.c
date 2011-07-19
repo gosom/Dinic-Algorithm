@@ -1,3 +1,4 @@
+#include "glib.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -68,4 +69,35 @@ void print_edge(edge e) {
 void edge_set_used(edge e, bool used) {
   assert(e != NULL);
   e->used = used;
+}
+
+
+edges_list read_edges() {
+  int first = 0, last = 0, capacity = 0;
+  edge e = NULL;
+  edges_list edges = NULL;
+
+  edges = queue_new();
+  while(scanf("%d %d %d\n", 
+	      &first, &last, &capacity) != EOF){
+    e = make_edge(first, last, capacity, 0, false);
+    queue_push_tail(edges, e);
+  }
+  return edges;
+}
+
+
+void print_edges(edges_list edges) {
+  int i, length=0;
+  GList *e = NULL;
+  
+  length = queue_length(edges);
+  e = edges->head;
+  for (i=0; i<length; i++, e = e->next) {
+    print_edge(e->data);
+  }
+}
+
+void destroy_edges(edges_list edges) {
+  queue_free(edges, (free_edge_func) &destroy_edge);
 }

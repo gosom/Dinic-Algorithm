@@ -1,7 +1,9 @@
 #ifndef _QUEUE_H_
 #define _QUEUE_H_
 
+#include "glib.h"
 #include <stdbool.h>
+
 
 typedef GQueue * queue;
 
@@ -14,7 +16,8 @@ gpointer queue_pop_head(queue q);
 gpointer queue_pop_tail(queue q);
 gpointer queue_peek_head(queue q);
 gpointer queue_peek_tail(queue q);
-bool queue_has_node(queue q, int node);
+bool queue_has_node(queue q, int vertex_id);
+void queue_delete_vertex(queue q, int vertex_id);
 void queue_free(queue q, void (*free_data) (gpointer));
 
 #endif

@@ -4,7 +4,6 @@
 #include "glib.h"
 #include "auxiliar_network.h"
 #include "vertex.h"
-#include "parser.h"
 #include "edge.h"
 #include "path.h"
 
@@ -12,11 +11,11 @@
 edge get_edge(edges_list edges, int first, int last) {
   int i = 0, edge_length=0;
   edge e = NULL;
-  GSList * edge_data = NULL;
+  GList * edge_data = NULL;
   
-  edge_length = g_slist_length(edges);
-  edge_data = edges;
-  for (i = 0; i < edge_length; i++, edge_data=g_slist_next(edge_data)) {
+  edge_length = queue_length(edges);
+  edge_data = edges->head;
+  for (i = 0; i < edge_length; i++, edge_data=edge_data->next) {
     e = edge_data->data;
     if (edge_first(e) == first 
 	&& edge_last(e) == last){
@@ -58,22 +57,22 @@ path get_path(aux_net an, edges_list edges,
   *minflow = INT_MAX;
   *complete = false;
   n = make_vertex(s, true); /* Source Node (s)*/
-  p = g_queue_new();
-  g_queue_push_tail(p, n);
+  p = queue_new();
+  queue_push_tail(p, n);
 
   while (true) {
 
     n = an_get_child(an, key);
     if (n != NULL) {
-      g_queue_push_tail(p, n);
+      queue_push_tail(p, n);
     } else if (key == s) {
       break;
     } else if (key == t) {
       *complete = true;
       break;
     } else {
-      g_queue_pop_tail(p);
-      n = g_queue_peek_tail(p);
+      queue_pop_tail(p);
+      n = queue_peek_tail(p);
       an_remove_edges_entering(an, key);
       key = vertex_id(n);
       continue;
@@ -124,10 +123,10 @@ void augment(aux_net an, edges_list edges,
   assert(edges != NULL);
   assert(p != NULL);
 
-  g_queue_pop_head(p); /* remove vertex s */
+  queue_pop_head(p); /* remove vertex s */
 
-  while (!g_queue_is_empty(p)) {
-    v = g_queue_pop_head(p);
+  while (!queue_is_empty(p)) {
+    v = queue_pop_head(p);
     last = vertex_id(v);
     augment_and_delete(an, edges, v, first, last, 
 		       mincost);
@@ -138,11 +137,15 @@ void augment(aux_net an, edges_list edges,
 
 
 void print_path(path p) {
-  int i = 0;
+  int i = 0, length = 0;
   vertex v = NULL;
+  GList * vertex_list = NULL;
 
-  for (i = 0; i < g_queue_get_length(p); i++) {
-    v = g_queue_peek_nth(p, i);
+  length = queue_length(p);
+  vertex_list = p->head;
+  for (i = 0; i < length; i++, 
+	 vertex_list=vertex_list->next) {
+    v = vertex_list->data;
     printf("%d ", vertex_id(v));
   }
   printf("\n");
