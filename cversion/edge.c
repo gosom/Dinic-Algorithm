@@ -47,6 +47,8 @@ guint edge_flow(edge e) {
   return e->flow;
 }
 
+
+
 void update_flow(edge e, guint flow) {
   e->flow = flow;
 }
