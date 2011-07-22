@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <time.h>
 #include <stdbool.h>
+#include <getopt.h>
 
 typedef struct net * Net;
 typedef struct edge *edge;
@@ -86,10 +87,10 @@ struct output{
   uint ttime;
 };
 
-#define VERBOSO      1
-#define MEDIR_T      2
-#define NUMERICO     4
-#define INVALIDARGS  8
+#define VERBOSE 1
+#define FLUJO 2
+#define CORTE 4
+#define NO_VALID_ARG 8
 
 #define SOURCE_ID 0
 #define TARGET_ID 1
@@ -139,7 +140,7 @@ void print_pathsdinic(output out,int flags); /* usada completa */
 void addpathdinic(path S, output out); /* usada ninguna */
 
 uint out_mincut_capacity(output out); /*usada completa*/
-int dinic(Net net, output*outp, int times, int flags); /* usada completa */
+int dinic(Net net, output * outp, int flags); /* usada completa */
 
 void printpathsek(output out, int num); /* usada completa */
 void printpathn(Net net, path path); /*usada ninguna */
@@ -148,6 +149,10 @@ void print_ncutminimal(output out);
 void out_add_mincut(output out, queue q);
 
 void printout(output out, int flags, int time[], int runs); /* usada completa */
+
+
+
+void print_flow_table(output out);
 
 uint minx(uint x, uint y);  /* usada completa */
 
@@ -214,74 +219,6 @@ void net_destroy(Net net){
 
 uint minx (uint x, uint y){
   return (x<y?x:y);
-}
-
-int check_args(int argc, char ** argv, int *times, int *ntimes){
-  int tempi,flags=0;
-  char tempc[20];
-  
-  /*flow A B C D*/
-  // A
-  if (argc<6||argc>7) return INVALIDARGS;
-  
-  sscanf(argv[1], "%s", tempc);
-  if (argc==6){
-    if (!(strcmp(tempc,"-t"))){
-      sscanf(argv[2], "%s", tempc);
-      if (!ISNUMBER(tempc)) return INVALIDARGS;
-      tempi=atoi(tempc);
-      if(tempi<0) return INVALIDARGS;
-      if(tempi>0){
-	flags|=MEDIR_T;
-	*ntimes=tempi;
-      }
-    }
-    else return INVALIDARGS;
-    
-    sscanf(argv[3], "%s", tempc);
-    if (!(strcmp(tempc,"-d"))){
-      sscanf(argv[4], "%s", tempc);
-      if (!ISNUMBER(tempc)) return INVALIDARGS;
-      *times=atoi(tempc);
-      if (*times<0) return INVALIDARGS;
-    } else return INVALIDARGS;
-    
-    sscanf(argv[5], "%s", tempc);
-    if (!(strcmp(tempc,"-n")))
-      flags|=NUMERICO;
-    else if ((strcmp(tempc,"-a")))
-      return INVALIDARGS;
-  }
-  else {
-    if (!(strcmp(tempc,"-v")))  flags|=VERBOSO;
-    
-    sscanf(argv[2], "%s", tempc);
-    if (!(strcmp(tempc,"-t"))){
-      sscanf(argv[3], "%s", tempc);
-      if (!ISNUMBER(tempc)) return INVALIDARGS;
-      tempi=atoi(tempc);
-      if (tempi<0) return INVALIDARGS;
-      if (tempi>0){
-	flags|=MEDIR_T;
-	*ntimes=tempi;
-      }
-    } else return INVALIDARGS;
-    
-    sscanf(argv[4], "%s", tempc);
-    if (!(strcmp(tempc,"-d"))){
-      sscanf(argv[5], "%s", tempc);
-      if (!ISNUMBER(tempc)) return INVALIDARGS;
-      *times=atoi(tempc);
-      if (*times<0) return INVALIDARGS;
-    } else return INVALIDARGS;
-    
-    sscanf(argv[6], "%s", tempc);
-    if (!(strcmp(tempc,"-n")))
-      flags|=NUMERICO;
-    else if ((strcmp(tempc,"-a")))
-      return INVALIDARGS;
-  }
-  return flags;
 }
 
 /**
@@ -398,8 +335,12 @@ void net_add_edge(Net network, uint x,uint y, uint C){
 
 void printout(output out, int flags, int time[], int runs){
   int cap;
-  if((flags&VERBOSO)&&!(flags&MEDIR_T))
-    printpathsek(out,flags&NUMERICO);
+
+  if ((flags&FLUJO))
+    print_flow_table(out);
+
+  if((flags&VERBOSE))
+    printpathsek(out, 1);
 
   printf("Valor del flow: %i\n",out->flow);
   /*
@@ -620,7 +561,7 @@ uint queue_get_forw_neighb(uint x, queue Q,
 uint f(uint x, uint y, Net net ){
   uint i, maxxy=net->n_xplusy[x+y];
   
-  for(i=0; i<maxxy; i++){
+  for(i=0; i < maxxy; i++){
     if(net->edges[x+y][i].x==x){
       return net->edges[x+y][i].f;
     }
@@ -734,11 +675,8 @@ void net_del_neighb(Net net, uint x, uint bal){
 void print_pathsdinic(output out,int flags){
   uint i;
   
-
-  if(flags&NUMERICO){
-    for(i=0; i<out->n_pathsNA; i++){
-      printpathn(out->net,out->pathsNA[i]);
-    }
+  for(i=0; i<out->n_pathsNA; i++){
+    printpathn(out->net,out->pathsNA[i]);
   }
 }
 
@@ -829,9 +767,9 @@ void out_path_destroy(output out){
 
 
 
-int dinic(Net net, output*outp, int times, int flags){
-  uint v=0, x=0, y=0, r=0, end=0;
-  int i=0; 
+int dinic(Net net, output * outp, int flags){
+  uint v = 0, x = 0, y = 0, r = 0, end = 0;
+  int i = 0; 
   bool stop_flag = false;
   output out=*outp;
   path p = NULL;
@@ -915,7 +853,7 @@ int dinic(Net net, output*outp, int times, int flags){
     out->flow += v;
     
 
-    if((flags&VERBOSO) ){
+    if((flags&VERBOSE) ){
       if (i>1)
       printf("PATHS DEL NETWORK AUXILIAR %u\n", i+1);
       else if (i==1)
@@ -952,6 +890,103 @@ void queue_destroy(queue queue){
   free(queue);
 }
 
+
+/**
+ * Revisa los argumentos pasados al programa 
+ * si es que se paso alguno y devuelve las opciones
+ * codificadas en un entero. En caso de error termina
+ * la ejecucion del programa.
+ * @param argc Cantidad de argumentos del programa.
+ * @param argv Vector con los argumentos del programa.
+ * @returns Un entero cuyo valor codifica las opciones.
+ */
+
+int check_options(int argc, char **argv) {
+  int c = 0;
+  int digit_optind = 0;
+  int flags = 0;
+
+  while (1) {
+    int this_option_optind = optind?optind:1;
+    int option_index = 0;
+
+    static struct option long_options[] = {
+      {"flujo", no_argument, 0, 'f'},
+      {"verbose", no_argument, 0, 'v'},
+      {"corte", no_argument, 0, 'c'},
+      {0, 0, 0, 0}
+    };
+
+    c = getopt_long(argc, argv, "fvc", 
+		    long_options, &option_index);
+
+    if (c == -1) {
+      break;
+    }
+
+    switch (c) {
+
+    case 'f':
+      flags |= FLUJO;
+      break;
+      
+    case 'v':
+      flags |= VERBOSE;
+      break;
+
+    case 'c':
+      flags |= CORTE;
+      break;
+
+    default:
+      flags |= NO_VALID_ARG;
+    }
+  }
+
+  if (optind < argc || flags & NO_VALID_ARG) {
+    printf("\n");
+    printf("usage: dinic [options]\n");
+    printf("options:\n");
+    printf("\t -f, --flujo \t Imprime tabla con valores del flujo.\n");
+    printf("\t -v, --verbose \t Imprime informacion de los caminos.\n");
+    printf("\t -c, --corte \t Imprime el corte minimal encontrado.\n");
+    printf("\n");
+
+    exit(EXIT_FAILURE);
+  }
+
+  return flags;
+}
+
+void print_flow_table(output out) {
+  Net net = out->net;
+  node n;
+  uint x ,y;
+  uint i, j, k;
+
+  printf("\nFlujo Maximal:\n\n");
+  
+  for (x = 0; x < net->n_nodes; x++) {
+    n = net->nodes[x];
+    for (j = 0; j < n.n_neighbs_forw; j++) {
+      y = n.neighbs_forw[j];
+      for (k = 0; k < net->n_xplusy[x+y]; k++) {
+	if (net->edges[x+y][k].x == x 
+	    && net->edges[x+y][k].y == y) {
+	  printf("%u\t%u\t%u (%u)\n", 
+		 net->edges[x+y][k].x,
+		 net->edges[x+y][k].y,
+		 net->edges[x+y][k].f,
+		 net->edges[x+y][k].C
+		 );
+	}
+      }
+    }
+  }
+  
+  printf("\n");
+}
+
 int main(int argc, char ** argv){
   Net network=NULL;
   int flags=0, times=0, end=0, i=0, runs=0;
@@ -961,21 +996,16 @@ int main(int argc, char ** argv){
   output out=NULL;
 
   
-  flags=check_args(argc,argv,&times, &runs);
-
-  if (flags==INVALIDARGS){
-    printf("invalid arguments\n");
-    return -1;
-  }
+  flags = check_options(argc, argv);
 
   network = read_data();
 
-  if (network==NULL){
+  if (network == NULL){
     printf("invalid input\n");
     return -1;
   }
 
-  end=dinic(network,&out,times,flags);
+  end = dinic(network, &out, flags);
   printout(out,flags, t, runs);
 
   return 0;
