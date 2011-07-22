@@ -136,14 +136,13 @@ queue_bfs queue_bfs_new(Net net);/* usada ninguna */
 void queue_bfs_add_neighbs(queue_bfs *Qq, Net net, uint i);/* usada completa */
 
 
-void print_pathsdinic(output out,int flags); /* usada completa */
+void print_pathsdinic(output out,int flags, int na); /* usada completa */
 void addpathdinic(path S, output out); /* usada ninguna */
 
 uint out_mincut_capacity(output out); /*usada completa*/
 int dinic(Net net, output * outp, int flags); /* usada completa */
 
-void printpathsek(output out, int num); /* usada completa */
-void printpathn(Net net, path path); /*usada ninguna */
+void printpathn(Net net, path path, uint *flowp); /*usada ninguna */
 void print_ncutminimal(output out);
 
 void out_add_mincut(output out, queue q);
@@ -338,29 +337,13 @@ void printout(output out, int flags, int time[], int runs){
 
   if ((flags&FLUJO))
     print_flow_table(out);
-
+  /*
   if((flags&VERBOSE))
     printpathsek(out, 1);
-
-  printf("Valor del flow: %i\n",out->flow);
-  /*
-  printf("Cut Minimal: S={");
-
-  if (flags&NUMERICO)
-    print_ncutminimal(out);
-  else
-    print_acutminimal(out);
-
-
-  cap=out_mincut_capacity(out);
-
-  printf("Capacidad del Cut Minimal: %u\n", cap);
-
-  if(flags&MEDIR_T){
-    printf("TIEMPO LEYENDO INPUT: %u segundos.\n", time[0]);
-    printf("TIEMPO TOTAL para %i corridas: %u segundos.\n", runs, time[1]);
-  }
   */
+  printf("Valor del flow: %i\n",out->flow);
+
+
 }
 
 uint out_mincut_capacity(output out){
@@ -374,26 +357,20 @@ uint out_mincut_capacity(output out){
   return cap;
 }
 
-void printpathsek(output out, int num){
-  uint i;
-  
-  for(i=0; i<out->n_paths; i++)
-    printpathn(out->net,out->paths[i]);
-}
 
-
-void printpathn(Net net, path path){
+void printpathn(Net net, path path, uint *flowp){
   int i;
 
-  printf("s.");
+  printf("0 ");
   for(i=path->n_nodes-2;i>0;i--){
     if(path->nodes[i].balance){
-      printf("%u.",net->ids[path->nodes[i].name]);
+      printf("%u ",net->ids[path->nodes[i].name]);
     }
     else
-      printf("<%u.",net->ids[path->nodes[i].name]);
+      printf("<- %u ",net->ids[path->nodes[i].name]);
   }
-  printf("t:%u\n", path->flow);
+  printf("1 (flujo transportado: %u)\n", path->flow);
+  *flowp = path->flow;
 }
 
 void print_ncutminimal(output out){
@@ -672,12 +649,18 @@ void net_del_neighb(Net net, uint x, uint bal){
     net->nodes[x].n_start_back++;
 }
 
-void print_pathsdinic(output out,int flags){
+void print_pathsdinic(output out,int flags, int na){
   uint i;
-  
+  uint flow = 0;
+  uint tot_flow = 0;
+
+  printf("N.A. %d:\n", na);
   for(i=0; i<out->n_pathsNA; i++){
-    printpathn(out->net,out->pathsNA[i]);
+    printpathn(out->net, out->pathsNA[i], &flow);
+    tot_flow += flow;
   }
+  printf("El N.A. %d aumenta el flujo en %u.\n\n", 
+	 na, tot_flow);
 }
 
 void addpathdinic(path S, output out){
@@ -854,21 +837,7 @@ int dinic(Net net, output * outp, int flags){
     
 
     if((flags&VERBOSE) ){
-      if (i>1)
-      printf("PATHS DEL NETWORK AUXILIAR %u\n", i+1);
-      else if (i==1)
-	printf("PATHS DEL SEGUNDO NETWORK AUXILIAR\n");
-      else 
-	printf("PATHS DEL PRIMER NETWORK AUXILIAR\n");
-      
-      if(!end) print_pathsdinic(out,flags);
-      
-      if (i>1)
-	printf("FIN NETWORK AUXILIAR %u\n", i+1);
-      else if (i==1)
-	printf("FIN DEL SEGUNDO NETWORK AUXILIAR\n");
-      else
-	printf("FIN DEL PRIMER NETWORK AUXILIAR\n");
+      if(!end) print_pathsdinic(out, flags, i+1);
     }
 
     net_aux_reset(net);
