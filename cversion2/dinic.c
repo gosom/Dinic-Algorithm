@@ -90,6 +90,16 @@ struct output{
 #define MEDIR_T      2
 #define NUMERICO     4
 #define INVALIDARGS  8
+
+#define SOURCE_ID 0
+#define TARGET_ID 1
+
+#define EDGES_RESERVED 1000
+#define NODES_RESERVED 1000
+
+#define MULT_NODES_RESERVED 2
+#define MULT_EDGES_RESERVED 2
+
 #define set_ancestor(net,y,x) net->nodes[y].a=x  /* usada */ 
 #define set_balance(net,y,x) net->nodes[y].b=x  /* usada */
 #define ancestor(net,y) net->nodes[y].a  /* usada */
@@ -147,7 +157,7 @@ void net_add_node(Net network, uint *n); /*usada*/
 void net_add_nodes(Net network, uint *x, uint *y);/*usada*/
 void net_add_neighbs(Net network, uint x, uint balance);/*usada*/
 void add_nedges(uint x,uint y, uint C, Net network);/*usada*/
-uint in_neighbs_forward_menos(uint x,queue Q,uint *i,Net net); /* usada completa */
+uint queue_get_forw_neighb(uint x,queue Q,uint *i,Net net); /* usada completa */
 
 uint f(uint x, uint y, Net net ); /* usada ninguna */
 uint C(uint x, uint y, Net net ); /* usada ninguna */
@@ -164,31 +174,43 @@ void queue_bfs_destroy(queue_bfs queue){
   free(queue);
 }
 
+/** 
+ * Destruye la estructura Net, liberando todos los recursos.
+ * @param net la estructura a destruir.
+ */
+
 void net_destroy(Net net){
   uint i;
+
   if(net->edges){
-    for(i=0;i<net->n_nodes*2; i++){
+    for(i=0; i < net->n_nodes * 2; i++){
       if(net->edges[i])
 	free(net->edges[i]);
     }
     free(net->edges);
   }
-
+  
   if(net->ids)
     free(net->ids);
   
   if(net->n_xplusy)
     free(net->n_xplusy);
-
-  for(i=0;i<net->n_nodes;i++){
+  
+  for(i = 0; i<net->n_nodes; i++){
     if(net->nodes[i].neighbs_forw)
       free(net->nodes[i].neighbs_forw);
     if(net->nodes[i].neighbs_back)
       free(net->nodes[i].neighbs_back);
   }
-
   free(net);
 }  
+
+
+/**
+ * Devuelve el menor de sus argumentos.
+ * @param x entero sin signo.
+ * @param y entero sin signo.
+ */
 
 uint minx (uint x, uint y){
   return (x<y?x:y);
@@ -262,8 +284,12 @@ int check_args(int argc, char ** argv, int *times, int *ntimes){
   return flags;
 }
 
-#define SOURCE_ID 0
-#define TARGET_ID 1
+/**
+ * Agrega un nodo al network.
+ * @param net El network.
+ * @param n Puntero al id del nodo a agregar.
+ * @returns n Devolvemos en n la posicion donde fue agregado el nodo
+ */
 
 void net_add_node(Net net, uint *n){
   uint n_nodes=net->n_nodes, pos=0, 
@@ -293,6 +319,17 @@ void net_add_node(Net net, uint *n){
   /* All other values are zero */
 }
 
+/**
+ * Agrega los nodos pasados como parametros.
+ * @param net El network.
+ * @param x Puntero al id del nodo a agregar.
+ * @param y Puntero al id del nodo a agregar.
+ * @returns x Puntero a la posicion donde 
+ * fue agregado el nodo.
+ * @returns y Puntero a la posicion donde 
+ * fue agregado el nodo.
+ */
+
 void net_add_nodes(Net net, uint *x,uint *y){
   uint i;
   bool x_in_net = false,
@@ -312,6 +349,12 @@ void net_add_nodes(Net net, uint *x,uint *y){
   if (!y_in_net) net_add_node(net, y);
 }
 
+/**
+ * Guarda cada nodo como vecino del otro.
+ * @param net El network.
+ * @param x Primer nodo del lado.
+ * @param y Segundo nodo del lado.
+ */
 
 void net_add_neighbs(Net net, uint x, uint y){
   uint n_neighbs_forw = ++net->nodes[x].n_neighbs_forw;
@@ -328,6 +371,14 @@ void net_add_neighbs(Net net, uint x, uint y){
   net->nodes[x].neighbs_forw[n_neighbs_forw-1] = y;
   net->nodes[y].neighbs_back[n_neighbs_back-1] = x;
 }
+
+/**
+ * Agrega un lado al network.
+ * @param network El network donde guardamos el lado.
+ * @param x El primer nodo del lado.
+ * @param y El segundo nodo del lado.
+ * @param C La capacidad del lado.
+ */
 
 void net_add_edge(Net network, uint x,uint y, uint C){
   uint pos = network->n_xplusy[x+y];
@@ -375,7 +426,7 @@ uint out_mincut_capacity(output out){
   uint cap=0, i, j, k, y;
   for(i=0; i<out->cutminimal->end;i++){
     j=out->cutminimal->tail[i];
-    for(k=0; (y=in_neighbs_forward_menos(j,out->cutminimal,&k,out->net)); k++){
+    for(k=0; (y=queue_get_forw_neighb(j,out->cutminimal,&k,out->net)); k++){
       cap+=f(j,y,out->net);
     }
   }
@@ -414,10 +465,13 @@ void print_ncutminimal(output out){
 }
 
 
-#define EDGES_RESERVED 1000
-#define NODES_RESERVED 1000
-
-
+/**
+ * Crea un nuevo network. Reserva memoria
+ * para cierta cantidad predeterminado de lados
+ * y nodos.
+ * @see EDGES_RESERVED, NODES_RESERVED
+ * @returns El network creado.
+ */
 
 Net net_new() {
   Net net = NULL;
@@ -439,11 +493,18 @@ Net net_new() {
   return net;
 }
 
+/**
+ * Aumenta el tamaño del network reservando
+ * espacio para mas nodos.
+ * @param netp Puntero al network.
+ * @param n Cantidad de nodos del network.
+ * @see MULT_NODES_RESERVED
+ */
 
 uint reserve_more_nodes(Net *netp, uint n) {
   Net net = *netp;
   uint tmp = n;
-  n *= 2;
+  n *= MULT_NODES_RESERVED;
 
   net = realloc(net, sizeof(struct net)
 		+ n * sizeof(node));
@@ -456,10 +517,19 @@ uint reserve_more_nodes(Net *netp, uint n) {
   return n;
 }
 
+
+/**
+ * Aumenta el tamaño del network reservando
+ * espacio para mas lados.
+ * @param netp Puntero al network.
+ * @param n Cantidad de nodos del network.
+ * @see MULT_EDGES_RESERVED
+ */
+
 uint reserve_more_edges(Net *netp, uint n) {
   uint tmp = n;
   Net net = *netp;
-  n *= 2;
+  n *= MULT_EDGES_RESERVED;
 
   net->edges = realloc(net->edges, n * sizeof(edge));
   net->n_xplusy = realloc(net->n_xplusy, 
@@ -474,7 +544,7 @@ uint reserve_more_edges(Net *netp, uint n) {
 }
 
 /**
- * @brief Lee los datos del network desde stdin 
+ * Lee los datos del network desde stdin 
  y los guarda en un Net.  
  * @see net_new, reserve_more_nodes, reserve_more_edges
  * @returns Un nuevo Net que contiene 
@@ -516,14 +586,31 @@ Net read_data() {
   return net;
 }
 
-uint in_neighbs_forward_menos(uint x,queue Q,uint *i,Net net){
-  uint j=*i, nvec=net->nodes[x].n_neighbs_forw, vec;
+/**
+ * Devuelve true si el nodo esta n la cola.
+ * @param q Cola.
+ * @param n Nodo.
+ * @returns True si el nodo esta en la cola.
+ */
+
+bool queue_has_node(queue q, uint n) {
+  return ((1 << (n&31))&q->set[n >> 5]);
+}
+
+
+
+
+uint queue_get_forw_neighb(uint x, queue Q, 
+			      uint *i, Net net){
+  uint j = *i, 
+    n_neighbs = net->nodes[x].n_neighbs_forw, 
+    neighb;
   
-  for(; j<nvec;j++){
-    vec=net->nodes[x].neighbs_forw[j];
-    if(!((1 << (vec&31))&Q->set[vec >> 5])){
+  for(; j < n_neighbs; j++){
+    neighb = net->nodes[x].neighbs_forw[j];
+    if(!queue_has_node(Q, neighb)){
       *i=j;
-      return vec; 
+      return neighb; 
     }
   }
   
