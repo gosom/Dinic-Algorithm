@@ -4,16 +4,16 @@
 #include <time.h>
 #include <stdbool.h>
 #include <getopt.h>
+#include "queue_bfs.h"
 
 typedef struct net * Net;
 typedef struct edge *edge;
 typedef struct node node;
-typedef struct queue * queue;
+
 typedef struct path * path;
 typedef struct snode snode;
 typedef struct output * output;
-typedef struct bfs_elem bfs_elem;
-typedef struct queue_bfs *queue_bfs; 
+
 
 typedef unsigned int uint;
 typedef unsigned short int usint;
@@ -46,24 +46,6 @@ struct net {
   node nodes[0]; // Array of nodes
 };
 
-struct queue{
-  uint start; // La posición del elemento inicial
-  uint end; // La posición del elemento final start<end
-  uint size; // Indica el tamaño de tail end<size
-  uint * set; // Array de booleanos que indica cuales son los elementos en la cola
-  uint tail[0]; // Array de elementos
-};
-
-struct bfs_elem{
-  uint id:16;
-};
-
-struct queue_bfs{
-  unsigned size;
-  unsigned end;
-  unsigned start;
-  bfs_elem tail[0];
-};
 
 struct snode{
   uint balance:1;
@@ -81,7 +63,7 @@ struct output{
   uint n_pathsNA; /*Agregado para la impresion de Dinic*/
   uint n_paths;
   uint flow;
-  queue cutminimal;
+  /*  queue cutminimal;*/
   path * paths;
   Net net;
   uint ttime;
@@ -107,9 +89,6 @@ struct output{
 #define balance(net,y) net->nodes[y].b   /* usada */
 #define path_set_flow(s,r) s->flow=r  /* usada */
 #define ISNUMBER(x) ((strspn(x, "0123456789")==strlen(x)) ? 1: 0) /*usada*/
-#define qbfs_not_empty(q) !(q->start==q->end) /* usada */
-#define qbfs_id(q,i) q->tail[i].id /* usada */
-#define qbfs_start(q) q->start /* usada */
 
 
 Net net_new(); 
@@ -131,9 +110,9 @@ void net_del_neighb(Net net, uint x, uint bal);
 void queue_bfs_destroy(queue_bfs q);/* usada ninguna */
 void out_path_destroy(output out); /* usada ninguna */
 
-void queue_bfs_add(Net net, queue_bfs *Qq, uint i, uint level); /* usada ninguna */
-queue_bfs queue_bfs_new(Net net);/* usada ninguna */
-void queue_bfs_add_neighbs(queue_bfs *Qq, Net net, uint i);/* usada completa */
+void net_queue_bfs_add(Net net, queue_bfs *Qq, uint i, uint level); /* usada ninguna */
+queue_bfs net_queue_bfs_new(Net net);/* usada ninguna */
+void net_queue_bfs_add_neighbs(queue_bfs *Qq, Net net, uint i);/* usada completa */
 
 
 void print_pathsdinic(output out,int flags, int na); /* usada completa */
@@ -143,10 +122,12 @@ uint out_mincut_capacity(output out); /*usada completa*/
 int dinic(Net net, output * outp, int flags); /* usada completa */
 
 void printpathn(Net net, path path, uint *flowp); /*usada ninguna */
+/*
 void print_ncutminimal(output out);
-
+*/
+/*
 void out_add_mincut(output out, queue q);
-
+*/
 void printout(output out, int flags, int time[], int runs); /* usada completa */
 
 
@@ -161,8 +142,9 @@ void net_add_node(Net network, uint *n); /*usada*/
 void net_add_nodes(Net network, uint *x, uint *y);/*usada*/
 void net_add_neighbs(Net network, uint x, uint balance);/*usada*/
 void add_nedges(uint x,uint y, uint C, Net network);/*usada*/
-uint queue_get_forw_neighb(uint x,queue Q,uint *i,Net net); /* usada completa */
-
+/*
+uint queue_get_forw_neighb(uint x,queue Q,uint *i,Net net); 
+*/
 uint f(uint x, uint y, Net net ); /* usada ninguna */
 uint C(uint x, uint y, Net net ); /* usada ninguna */
 void setf(uint x, uint y, Net net ,uint f); /* usada ninguna*/
@@ -173,10 +155,6 @@ void path_add_node (path *S, uint i, uint b); /* usada ninguna */
 
 int main(int argc, char ** argv);
 
-
-void queue_bfs_destroy(queue_bfs queue){
-  free(queue);
-}
 
 /** 
  * Destruye la estructura Net, liberando todos los recursos.
@@ -345,7 +323,7 @@ void printout(output out, int flags, int time[], int runs){
 
 
 }
-
+/*
 uint out_mincut_capacity(output out){
   uint cap=0, i, j, k, y;
   for(i=0; i<out->cutminimal->end;i++){
@@ -356,7 +334,7 @@ uint out_mincut_capacity(output out){
   }
   return cap;
 }
-
+*/
 
 void printpathn(Net net, path path, uint *flowp){
   int i;
@@ -373,6 +351,7 @@ void printpathn(Net net, path path, uint *flowp){
   *flowp = path->flow;
 }
 
+/*
 void print_ncutminimal(output out){
   uint i;
   for(i=out->cutminimal->end-1; i>=1; i--)
@@ -381,7 +360,7 @@ void print_ncutminimal(output out){
     printf("%u",out->net->ids[out->cutminimal->tail[0]]);
   printf("}\n");
 }
-
+*/
 
 /**
  * Crea un nuevo network. Reserva memoria
@@ -504,20 +483,8 @@ Net read_data() {
   return net;
 }
 
-/**
- * Devuelve true si el nodo esta n la cola.
- * @param q Cola.
- * @param n Nodo.
- * @returns True si el nodo esta en la cola.
- */
 
-bool queue_has_node(queue q, uint n) {
-  return ((1 << (n&31))&q->set[n >> 5]);
-}
-
-
-
-
+/*
 uint queue_get_forw_neighb(uint x, queue Q, 
 			      uint *i, Net net){
   uint j = *i, 
@@ -535,6 +502,7 @@ uint queue_get_forw_neighb(uint x, queue Q,
   return 0;
 }
 
+*/
 uint f(uint x, uint y, Net net ){
   uint i, maxxy=net->n_xplusy[x+y];
   
@@ -607,10 +575,11 @@ void path_add_node (path *Sp, uint i, uint b){
   S->nodes[S->n_nodes-1].balance=b;
   S->nodes[S->n_nodes-1].name=i;
 }
-
+/*
 void out_add_mincut(output out, queue Q){
   out->cutminimal=Q;
 }
+*/
 
 uint net_neighb_forw(Net net, uint x){
   uint i, vec=0;
@@ -669,48 +638,6 @@ void addpathdinic(path S, output out){
   out->pathsNA[out->n_pathsNA-1]=S;
 }
 
-queue_bfs queue_bfs_new(Net net){
-  queue_bfs result;
-  result=malloc(sizeof(struct queue_bfs) + net->n_nodes*sizeof(struct bfs_elem));
-  result->start=0;
-  result->end=1;
-  result->size=net->n_nodes;
-  result->tail[0].id=0;
-  net->nodes[0].level=0;
-
-  return result;
-}
-
-void queue_bfs_add(Net net, queue_bfs *Qq, uint i,  uint level){
-  queue_bfs Q=*Qq;
-
-  if (net->nodes[i].level==(uint)-1){
-    Q->tail[Q->end].id=i;
-    Q->end++;
-    net->nodes[i].level=level;
-    //    printf("agrego a %i a la queue. level=%u,\n", net->ids[i], level);
-  }
-}
-
-void queue_bfs_add_neighbs(queue_bfs *Qq, Net net, uint i){
-  queue_bfs Q=*Qq;
-  uint j, k, in=qbfs_id(Q,i);
-  
-  for (j=0;j<net->nodes[in].n_neighbs_forw;j++){
-    Q=*Qq;
-    k=net->nodes[in].neighbs_forw[j];
-    if(f(in,k,net)<C(in,k,net))
-      queue_bfs_add(net, Qq, k,net->nodes[in].level+1);
-  }
-
-  for (j=0;j<net->nodes[in].n_neighbs_back;j++){
-    Q=*Qq;
-    k=net->nodes[in].neighbs_back[j];
-    if(f(k,in,net)>0&&k!=in)
-      queue_bfs_add(net, Qq, k, net->nodes[in].level+1);
-   }
-}
-
 void net_reset_start(Net net){
   uint i;
  
@@ -722,13 +649,17 @@ void net_reset_start(Net net){
 
 void net_aux_new(Net net){
   uint i;
-  queue_bfs Q=queue_bfs_new(net);
+  queue_bfs Q = net_queue_bfs_new(net);
+  
+  do {
+    i = queue_bfs_pop(Q);
+    if (net->nodes[i].level < net->nodes[1].level)
+      net_queue_bfs_add_neighbs(&Q,net,i);
+    else break;
 
-  for(i=qbfs_start(Q);qbfs_not_empty(Q)&&net->nodes[qbfs_id(Q,i)].level<net->nodes[1].level;i=++qbfs_start(Q))
-    queue_bfs_add_neighbs(&Q,net,i);
-  
-  net_reset_start(net);/*Resetea n_start_forw y n_start_back*/
-  
+  } while (!queue_bfs_is_empty(Q));
+
+  net_reset_start(net);/*Resetea n_start_forw y n_xstart_back*/
   queue_bfs_destroy(Q);
 }
 
@@ -738,6 +669,50 @@ void net_aux_reset(Net net){
   for(i=1; i<net->n_nodes; i++)
     net->nodes[i].level=(uint)-1;
 }
+
+
+queue_bfs net_queue_bfs_new(Net net){
+  queue_bfs result;
+  result = queue_bfs_new(net->n_nodes);
+  queue_bfs_push(result, 0);
+  net->nodes[0].level=0;
+
+  return result;
+}
+
+
+void net_queue_bfs_add(Net net, queue_bfs *Qq, uint i,  uint level){
+  queue_bfs Q=*Qq;
+
+  if (net->nodes[i].level==(uint)-1){
+    queue_bfs_push(Q, i);
+    net->nodes[i].level=level;
+  }
+}
+
+
+
+void net_queue_bfs_add_neighbs(queue_bfs *Qq, Net net, uint in){
+  queue_bfs Q=*Qq;
+  uint j, k;
+  
+  for (j=0; j<net->nodes[in].n_neighbs_forw; j++){
+    Q=*Qq;
+    k=net->nodes[in].neighbs_forw[j];
+    if(f(in, k, net) < C(in, k, net))
+      net_queue_bfs_add(net, Qq, k, 
+			net->nodes[in].level+1);
+  }
+
+  for (j=0;j<net->nodes[in].n_neighbs_back;j++){
+    Q=*Qq;
+    k=net->nodes[in].neighbs_back[j];
+    if(f(k,in,net)>0&&k!=in)
+      net_queue_bfs_add(net, Qq, k, net->nodes[in].level+1);
+   }
+}
+
+
 
 void out_path_destroy(output out){
   uint i;
@@ -852,11 +827,6 @@ int dinic(Net net, output * outp, int flags){
   *outp=out;
   
   return end;
-}
-
-void queue_destroy(queue queue){
-  free(queue->set);
-  free(queue);
 }
 
 
@@ -978,4 +948,13 @@ int main(int argc, char ** argv){
   printout(out,flags, t, runs);
 
   return 0;
+}
+
+
+void print_minimal_cut(output out) {
+  Net net = out->net;
+
+  printf("Corte: {0");
+
+  
 }
