@@ -5,58 +5,22 @@
 #include <stdbool.h>
 #include <getopt.h>
 #include "queue_bfs.h"
+#include "node.h"
+#include "edge.h"
+#include "path.h"
 
-typedef struct net * Net;
-typedef struct edge *edge;
-typedef struct node node;
-
-typedef struct path * path;
-typedef struct snode snode;
 typedef struct output * output;
-
 
 typedef unsigned int uint;
 typedef unsigned short int usint;
 
-struct edge{
-  uint x:14;
-  uint y:14;
-  uint C:31; // Capacidad
-  uint f:31; // Flow
-};
-
-struct node{
-  uint level; //Para hacer networks auxiliares
-  uint a:14; // Ancestro
-  uint b:1; // Balance
-  uint n_neighbs_forw:14; // Numero de vecinos forward
-  uint n_neighbs_back:14; // Numero de vecinos backward
-  uint n_start_forw:14; //para Dinic
-  uint n_start_back:14; // para Dinic
-  uint *neighbs_forw; // Indice de vecinos_forwward
-  uint *neighbs_back; // Indice de vecinos_backward
-};
+typedef struct net * Net;
 
 struct net {
-  uint *ids; // ids correspondientes a cada indice
-  uint n_nodes;
-  edge *edges; // Array of edges
-  usint *n_xplusy;
-  uint n_edges;
-  node nodes[0]; // Array of nodes
+  nodes_list nodes;
+  edges_list edges;
 };
 
-
-struct snode{
-  uint balance:1;
-  uint name:15;
-};
-
-struct path{
-  uint flow:31;
-  uint n_nodes:17;
-  snode nodes[0];
-};
   
 struct output{
   path *pathsNA; /*Agregado para la impresion de Dinic*/
@@ -83,13 +47,6 @@ struct output{
 #define MULT_NODES_RESERVED 2
 #define MULT_EDGES_RESERVED 2
 
-#define set_ancestor(net,y,x) net->nodes[y].a=x  /* usada */ 
-#define set_balance(net,y,x) net->nodes[y].b=x  /* usada */
-#define ancestor(net,y) net->nodes[y].a  /* usada */
-#define balance(net,y) net->nodes[y].b   /* usada */
-#define path_set_flow(s,r) s->flow=r  /* usada */
-#define ISNUMBER(x) ((strspn(x, "0123456789")==strlen(x)) ? 1: 0) /*usada*/
-
 
 Net net_new(); 
 
@@ -97,22 +54,23 @@ void net_destroy(Net net);
 
 uint net_neighb_forw(Net net, uint x); 
 uint net_neighb_back(Net net, uint x);
-
-void net_reset_start(Net net);
-
+void print_adj_table(Net net);
 
 void net_aux_new(Net net); 
-void net_aux_reset(Net net); 
 
-void net_del_neighb(Net net, uint x, uint bal);
+void net_del_neighb(nodes_list n, uint x, uint bal);
 
 
 void queue_bfs_destroy(queue_bfs q);/* usada ninguna */
 void out_path_destroy(output out); /* usada ninguna */
 
-void net_queue_bfs_add(Net net, queue_bfs *Qq, uint i, uint level); /* usada ninguna */
+void net_queue_bfs_add(nodes_list nodes, 
+		       queue_bfs *Qq, uint i, 
+		       uint level); /* usada ninguna */
 queue_bfs net_queue_bfs_new(Net net);/* usada ninguna */
-void net_queue_bfs_add_neighbs(queue_bfs *Qq, Net net, uint i);/* usada completa */
+void net_queue_bfs_add_neighbs(queue_bfs *Qq, 
+			       Net net, 
+			       uint i);/* usada completa */
 
 
 void print_pathsdinic(output out,int flags, int na); /* usada completa */
@@ -132,26 +90,18 @@ void printout(output out, int flags, int time[], int runs); /* usada completa */
 
 
 
-void print_flow_table(output out);
+void print_flow_table(Net net);
 
 uint minx(uint x, uint y);  /* usada completa */
 
 
 int check_args(int argc, char ** argv, int *times, int *ntimes); /* usada completa */
-void net_add_node(Net network, uint *n); /*usada*/
+
+uint net_add_node(Net network, uint n); /*usada*/
+
 void net_add_nodes(Net network, uint *x, uint *y);/*usada*/
-void net_add_neighbs(Net network, uint x, uint balance);/*usada*/
-void add_nedges(uint x,uint y, uint C, Net network);/*usada*/
-/*
-uint queue_get_forw_neighb(uint x,queue Q,uint *i,Net net); 
-*/
-uint f(uint x, uint y, Net net ); /* usada ninguna */
-uint C(uint x, uint y, Net net ); /* usada ninguna */
-void setf(uint x, uint y, Net net ,uint f); /* usada ninguna*/
+
 output createout(void); /* usada ninguna */
-path path_new(void); /* usada ninguna */
-void path_destroy(path); /* usada ninguna */
-void path_add_node (path *S, uint i, uint b); /* usada ninguna */
 
 int main(int argc, char ** argv);
 
@@ -161,29 +111,60 @@ int main(int argc, char ** argv);
  * @param net la estructura a destruir.
  */
 
-void net_destroy(Net net){
-  uint i;
 
-  if(net->edges){
-    for(i=0; i < net->n_nodes * 2; i++){
-      if(net->edges[i])
-	free(net->edges[i]);
+
+uint net_neighb_forw(Net net, uint x){
+  uint y = 0, i;
+  uint n_forw = nodes_forw_get_length(net->nodes, x);
+  uint start_forw=nodes_forw_get_start(net->nodes, x);
+
+  for (i = start_forw; i < n_forw; i++) {
+    y = nodes_nth_forw_neighb(net->nodes, x, i);
+    if (nodes_get_level(net->nodes, x) 
+	< nodes_get_level(net->nodes, y)
+	&& edges_flow(net->edges, x, y) 
+	< edges_capacity(net->edges, x, y)) {
+      break;
     }
-    free(net->edges);
+
+    else  {
+      nodes_del_forw(net->nodes, x);
+      y = 0;
+    }
   }
   
-  if(net->ids)
-    free(net->ids);
-  
-  if(net->n_xplusy)
-    free(net->n_xplusy);
-  
-  for(i = 0; i<net->n_nodes; i++){
-    if(net->nodes[i].neighbs_forw)
-      free(net->nodes[i].neighbs_forw);
-    if(net->nodes[i].neighbs_back)
-      free(net->nodes[i].neighbs_back);
+   return y;
+}
+
+
+
+uint net_neighb_back(Net net, uint x){
+  uint y = 0, i;
+  uint n_back = nodes_back_get_length(net->nodes, x);
+  uint start_back=nodes_back_get_start(net->nodes, x);
+
+  for (i = start_back; i < n_back; i++) {
+    y = nodes_nth_back_neighb(net->nodes, x, i);
+    if (nodes_get_level(net->nodes, x) 
+	< nodes_get_level(net->nodes, y)
+	&& edges_flow(net->edges, y, x) > 0)
+      break;
+    else  {
+      nodes_del_back(net->nodes, x);
+      y = 0;
+    }
   }
+  
+  return y;
+}
+
+
+
+
+
+void net_destroy(Net net){
+  free(net->edges);
+  free(net->nodes);
   free(net);
 }  
 
@@ -205,32 +186,10 @@ uint minx (uint x, uint y){
  * @returns n Devolvemos en n la posicion donde fue agregado el nodo
  */
 
-void net_add_node(Net net, uint *n){
-  uint n_nodes=net->n_nodes, pos=0, 
-    s=SOURCE_ID, t=TARGET_ID;
-
-  /* Custom settings for each type of node */
-
-  if(*n != s && *n != t){
-    pos = n_nodes;
-    net->nodes[pos].level = (uint)-1;
-    net->ids[pos] = *n;
-    net->n_nodes++;
-  } else if(*n != t){
-    pos = 0;
-    net->nodes[pos].level = 0;
-    net->ids[pos] = s;
-  } else {
-    pos = 1;
-    net->nodes[pos].level = (uint)-1;
-    net->ids[pos] = t;
-  }
-
-  /* Common settings */
-
-  *n = pos;
-
-  /* All other values are zero */
+uint  net_add_node(Net net, uint id){
+  uint pos = 0;
+  pos = nodes_add(net->nodes, id);
+  return pos;
 }
 
 /**
@@ -244,46 +203,29 @@ void net_add_node(Net net, uint *n){
  * fue agregado el nodo.
  */
 
-void net_add_nodes(Net net, uint *x,uint *y){
+void net_add_nodes(Net net, uint *x, uint *y){
   uint i;
   bool x_in_net = false,
     y_in_net = false;
 
-  for(i = 0; i < net->n_nodes; i++){
-    if(!x_in_net && net->ids[i] == *x){
+  
+  for(i = 0; i < nodes_get_length(net->nodes); i++){
+    if(!x_in_net && nodes_get_id(net->nodes, i) 
+       == *x){
       x_in_net = true;
       *x = i;
-    } else if(!y_in_net && net->ids[i] == *y){
+    } 
+    
+  }
+  for(i = 0; i < nodes_get_length(net->nodes); i++){
+    if(!y_in_net && nodes_get_id(net->nodes, i) == *y){
       y_in_net = true;
       *y = i;
     }
   }
 
-  if (!x_in_net) net_add_node(net, x);
-  if (!y_in_net) net_add_node(net, y);
-}
-
-/**
- * Guarda cada nodo como vecino del otro.
- * @param net El network.
- * @param x Primer nodo del lado.
- * @param y Segundo nodo del lado.
- */
-
-void net_add_neighbs(Net net, uint x, uint y){
-  uint n_neighbs_forw = ++net->nodes[x].n_neighbs_forw;
-  uint n_neighbs_back = ++net->nodes[y].n_neighbs_back;
-
-  net->nodes[x].neighbs_forw = 
-    realloc(net->nodes[x].neighbs_forw,
-	    n_neighbs_forw * sizeof(uint));
-
-  net->nodes[y].neighbs_back = 
-    realloc(net->nodes[y].neighbs_back,
-	    n_neighbs_back * sizeof(uint));
-
-  net->nodes[x].neighbs_forw[n_neighbs_forw-1] = y;
-  net->nodes[y].neighbs_back[n_neighbs_back-1] = x;
+  if (!x_in_net) *x = net_add_node(net, *x);
+  if (!y_in_net) *y = net_add_node(net, *y);
 }
 
 /**
@@ -295,72 +237,43 @@ void net_add_neighbs(Net net, uint x, uint y){
  */
 
 void net_add_edge(Net network, uint x,uint y, uint C){
-  uint pos = network->n_xplusy[x+y];
-  uint size = ++network->n_xplusy[x+y];
-
-  network->edges[x+y] = realloc(network->edges[x+y],
-				sizeof(struct edge)
-				* size);
-  network->edges[x+y][pos].x = x;
-  network->edges[x+y][pos].y = y;
-  network->edges[x+y][pos].C = C;
-  network->edges[x+y][pos].f = 0;
-  network->n_edges++;
-  net_add_neighbs(network, x, y);
+  edges_add(network->edges, x, y, C, 0);
+  nodes_add_neighbs(network->nodes, x, y);
 }
 
 
-void printout(output out, int flags, int time[], int runs){
-  int cap;
+void printout(output out, int flags, 
+	      int time[], int runs){
 
   if ((flags&FLUJO))
-    print_flow_table(out);
+    print_flow_table(out->net);
   /*
   if((flags&VERBOSE))
     printpathsek(out, 1);
   */
   printf("Valor del flow: %i\n",out->flow);
-
-
 }
-/*
-uint out_mincut_capacity(output out){
-  uint cap=0, i, j, k, y;
-  for(i=0; i<out->cutminimal->end;i++){
-    j=out->cutminimal->tail[i];
-    for(k=0; (y=queue_get_forw_neighb(j,out->cutminimal,&k,out->net)); k++){
-      cap+=f(j,y,out->net);
-    }
-  }
-  return cap;
-}
-*/
 
-void printpathn(Net net, path path, uint *flowp){
+
+void printpathn(Net net, path p, uint *flowp){
   int i;
+  nodes_list nodes = net->nodes;
 
   printf("0 ");
-  for(i=path->n_nodes-2;i>0;i--){
-    if(path->nodes[i].balance){
-      printf("%u ",net->ids[path->nodes[i].name]);
-    }
-    else
-      printf("<- %u ",net->ids[path->nodes[i].name]);
+  for(i = path_length(p)-2; 0 < i ; i--){
+    if(path_nth_balance(p, i)){
+      printf("%u ",
+	     nodes_get_id(nodes, 
+			  path_nth_name(p, i)));
+    } else
+      printf("<- %u ",
+	     nodes_get_id(nodes, 
+			   path_nth_name(p, i)));
   }
-  printf("1 (flujo transportado: %u)\n", path->flow);
-  *flowp = path->flow;
+  printf("1 (flujo transportado: %u)\n", path_flow(p));
+  *flowp = path_flow(p);
 }
 
-/*
-void print_ncutminimal(output out){
-  uint i;
-  for(i=out->cutminimal->end-1; i>=1; i--)
-    printf("%u,",out->net->ids[out->cutminimal->tail[i]]);
-  if(out->cutminimal->end>0)
-    printf("%u",out->net->ids[out->cutminimal->tail[0]]);
-  printf("}\n");
-}
-*/
 
 /**
  * Crea un nuevo network. Reserva memoria
@@ -375,69 +288,17 @@ Net net_new() {
   uint edges_reserved = EDGES_RESERVED,
     nodes_reserved = NODES_RESERVED;
 
+  
   net = calloc(1, sizeof(struct net) 
 	       + nodes_reserved * sizeof(node));
-  net->n_xplusy = calloc(edges_reserved, 
-			 sizeof(usint));
-  net->edges = calloc(edges_reserved, sizeof(edge));
-  net->ids = malloc(nodes_reserved * sizeof(uint));
-  net->n_nodes = 2;
-  net->n_edges = 0;
-  
-  net->ids[0] = 0;
-  net->ids[1] = 1;
+
+  net->nodes = nodes_new(nodes_reserved);
+  net->edges = edges_new(edges_reserved);
+
+  nodes_set_id(net->nodes, 0, 0);
+  nodes_set_id(net->nodes, 1, 1);
 
   return net;
-}
-
-/**
- * Aumenta el tamaño del network reservando
- * espacio para mas nodos.
- * @param netp Puntero al network.
- * @param n Cantidad de nodos del network.
- * @see MULT_NODES_RESERVED
- */
-
-uint reserve_more_nodes(Net *netp, uint n) {
-  Net net = *netp;
-  uint tmp = n;
-  n *= MULT_NODES_RESERVED;
-
-  net = realloc(net, sizeof(struct net)
-		+ n * sizeof(node));
-  memset(&net->nodes[tmp], 0, 
-	 (n-tmp) * sizeof(node));
-  net->ids = realloc(net->ids, n * sizeof(uint));
-
-  *netp = net;
-
-  return n;
-}
-
-
-/**
- * Aumenta el tamaño del network reservando
- * espacio para mas lados.
- * @param netp Puntero al network.
- * @param n Cantidad de nodos del network.
- * @see MULT_EDGES_RESERVED
- */
-
-uint reserve_more_edges(Net *netp, uint n) {
-  uint tmp = n;
-  Net net = *netp;
-  n *= MULT_EDGES_RESERVED;
-
-  net->edges = realloc(net->edges, n * sizeof(edge));
-  net->n_xplusy = realloc(net->n_xplusy, 
-			  n * sizeof(usint));
-  memset(&net->edges[tmp], 0, 
-	 (n - tmp) * sizeof(edge));
-  memset(&net->n_xplusy[tmp], 0, 
-	 (n - tmp) * sizeof(usint));
-  *netp = net;
-
-  return n;
 }
 
 /**
@@ -452,11 +313,10 @@ Net read_data() {
   Net net = NULL;
   int readed = 0;
   uint edges_reserved = EDGES_RESERVED,
-    edges_tmp = 0,
     nodes_reserved = NODES_RESERVED,
     x = 0,y = 0,c = 0;
   
-  // freopen ("input", "r", stdin);
+  freopen ("../pyversion/tests/networks/net02.txt", "r", stdin);
 
   net = net_new();
 
@@ -465,15 +325,18 @@ Net read_data() {
 
     net_add_nodes(net, &x, &y);
     net_add_edge(net, x, y, c);
-    if (net->n_nodes+1 >= nodes_reserved){
-      nodes_reserved = 
-	reserve_more_nodes(&net, nodes_reserved);
+    if (nodes_get_length(net->nodes)+1 
+	>= nodes_reserved){
+      nodes_reserved *= 2;
+      nodes_realloc(net->nodes, nodes_reserved);
     }
-    if (net->n_nodes *2+2 >= edges_reserved){
-      edges_reserved = 
-	reserve_more_edges(&net, edges_reserved);
+    if (nodes_get_length(net->nodes)*2+2 
+	>= edges_reserved){
+      edges_reserved *= 2;
+      edges_realloc(net->edges, edges_reserved);
     }
   }
+
 
   if(readed < 3 && readed >= 0){
     net_destroy(net);
@@ -483,139 +346,20 @@ Net read_data() {
   return net;
 }
 
-
-/*
-uint queue_get_forw_neighb(uint x, queue Q, 
-			      uint *i, Net net){
-  uint j = *i, 
-    n_neighbs = net->nodes[x].n_neighbs_forw, 
-    neighb;
-  
-  for(; j < n_neighbs; j++){
-    neighb = net->nodes[x].neighbs_forw[j];
-    if(!queue_has_node(Q, neighb)){
-      *i=j;
-      return neighb; 
-    }
-  }
-  
-  return 0;
-}
-
-*/
-uint f(uint x, uint y, Net net ){
-  uint i, maxxy=net->n_xplusy[x+y];
-  
-  for(i=0; i < maxxy; i++){
-    if(net->edges[x+y][i].x==x){
-      return net->edges[x+y][i].f;
-    }
-    if (net->edges[x+y][i].x==y){
-      return net->edges[x+y][i].f;
-    }
-  }
-
-  return 0;
-}
-
-uint C(uint x, uint y, Net net ){
-  uint i, maxxy=net->n_xplusy[x+y];
-  
-  for(i=0; i<maxxy; i++){
-    if(net->edges[x+y][i].x==x){
-      return net->edges[x+y][i].C;
-    }
-    if (net->edges[x+y][i].x==y){
-      return net->edges[x+y][i].C;
-    }
-  }
-  return 0;
-}
-
-void setf(uint x, uint y, Net net ,uint f){
-  uint i, maxxy=net->n_xplusy[x+y];
-  
-  for(i=0; i<maxxy; i++){
-    if(net->edges[x+y][i].x==x){
-      net->edges[x+y][i].f=f;
-      break;
-    }
-    if (net->edges[x+y][i].x==y){
-      net->edges[x+y][i].f=f;
-      break;
-    }
-  }
-}
-
 output createout(){
   output out;
 
-  out=calloc(1,sizeof(struct output));
+  out = calloc(1,sizeof(struct output));
 
   return out;
 }
 
-path path_new(){
-  path path;
-  path=malloc(sizeof(struct path)+sizeof(struct snode));
-  path->n_nodes=0;
-  return path;
-}
-
-void path_destroy(path p){
-  free(p);
-}
-
-
-void path_add_node (path *Sp, uint i, uint b){
-  path S=*Sp;
-  S->n_nodes++;
-  *Sp=realloc(S,sizeof(struct path)+(S->n_nodes) * sizeof (struct snode));
-  S=*Sp;
-  S->nodes[S->n_nodes-1].balance=b;
-  S->nodes[S->n_nodes-1].name=i;
-}
-/*
-void out_add_mincut(output out, queue Q){
-  out->cutminimal=Q;
-}
-*/
-
-uint net_neighb_forw(Net net, uint x){
-  uint i, vec=0;
-  i=net->nodes[x].n_start_forw;
-  while(i<net->nodes[x].n_neighbs_forw){
-    vec=net->nodes[x].neighbs_forw[i];
-    if (net->nodes[x].level < net->nodes[vec].level && f(x,vec,net)<C(x,vec,net))
-      break;
-    else {
-      i=++net->nodes[x].n_start_forw;
-      vec=0;
-    }
-  }
-  return vec;
-}
-
-uint net_neighb_back(Net net, uint x){
-  uint i, vec=0;
-  i=net->nodes[x].n_start_back;
-  while(i<net->nodes[x].n_neighbs_back){
-    vec=net->nodes[x].neighbs_back[i];
-    if (net->nodes[x].level < net->nodes[vec].level && f(vec,x,net)>0)
-      break;
-    else {
-      i=++net->nodes[x].n_start_back;
-      vec=0;
-    }
-  }
-  return vec;
-}
-
-void net_del_neighb(Net net, uint x, uint bal){
+void net_del_neighb(nodes_list nodes, 
+		    uint x, uint bal){
   if(bal)
-    net->nodes[x].n_start_forw++;
+    nodes_del_forw(nodes, x);
   else
-    net->nodes[x].n_start_back++;
+    nodes_del_back(nodes, x);
 }
 
 void print_pathsdinic(output out,int flags, int na){
@@ -634,82 +378,83 @@ void print_pathsdinic(output out,int flags, int na){
 
 void addpathdinic(path S, output out){
   out->n_pathsNA++;
-  out->pathsNA=realloc(out->pathsNA, sizeof(path) * out->n_pathsNA); //path es struct path*
+  out->pathsNA=realloc(out->pathsNA, sizeof(path) * out->n_pathsNA); 
   out->pathsNA[out->n_pathsNA-1]=S;
 }
 
-void net_reset_start(Net net){
-  uint i;
- 
-  for(i=0;i<net->n_nodes;i++){
-    net->nodes[i].n_start_forw=0;
-    net->nodes[i].n_start_back=0;
-  }
-}
-
 void net_aux_new(Net net){
-  uint i;
+  uint i, t = 1;
   queue_bfs Q = net_queue_bfs_new(net);
   
   do {
     i = queue_bfs_pop(Q);
-    if (net->nodes[i].level < net->nodes[1].level)
-      net_queue_bfs_add_neighbs(&Q,net,i);
+    printf("queue pop %u\n", i);
+    if (nodes_get_level(net->nodes, i) 
+	< nodes_get_level(net->nodes, t))
+      net_queue_bfs_add_neighbs(&Q, net, i);
     else break;
 
   } while (!queue_bfs_is_empty(Q));
 
-  net_reset_start(net);/*Resetea n_start_forw y n_xstart_back*/
+  nodes_reset_start(net->nodes);/*Resetea n_start_forw y n_xstart_back*/
   queue_bfs_destroy(Q);
-}
-
-void net_aux_reset(Net net){
-  uint i;
-
-  for(i=1; i<net->n_nodes; i++)
-    net->nodes[i].level=(uint)-1;
 }
 
 
 queue_bfs net_queue_bfs_new(Net net){
   queue_bfs result;
-  result = queue_bfs_new(net->n_nodes);
+  uint s = 0;
+  result = queue_bfs_new(nodes_get_length(net->nodes));
   queue_bfs_push(result, 0);
-  net->nodes[0].level=0;
+  nodes_set_level(net->nodes, s, 0);
 
   return result;
 }
 
 
-void net_queue_bfs_add(Net net, queue_bfs *Qq, uint i,  uint level){
+void net_queue_bfs_add(nodes_list nodes, 
+		       queue_bfs *Qq, 
+		       uint i,  uint level){
   queue_bfs Q=*Qq;
 
-  if (net->nodes[i].level==(uint)-1){
+  if (nodes_get_level(nodes, i) == (uint)-1){
     queue_bfs_push(Q, i);
-    net->nodes[i].level=level;
+    nodes_set_level(nodes, i, level);
   }
 }
 
 
 
-void net_queue_bfs_add_neighbs(queue_bfs *Qq, Net net, uint in){
-  queue_bfs Q=*Qq;
-  uint j, k;
+void net_queue_bfs_add_neighbs(queue_bfs *Qq, 
+			       Net net, 
+			       uint in){
+  uint i, k, j, max;
   
-  for (j=0; j<net->nodes[in].n_neighbs_forw; j++){
-    Q=*Qq;
-    k=net->nodes[in].neighbs_forw[j];
-    if(f(in, k, net) < C(in, k, net))
-      net_queue_bfs_add(net, Qq, k, 
-			net->nodes[in].level+1);
-  }
 
-  for (j=0;j<net->nodes[in].n_neighbs_back;j++){
-    Q=*Qq;
-    k=net->nodes[in].neighbs_back[j];
-    if(f(k,in,net)>0&&k!=in)
-      net_queue_bfs_add(net, Qq, k, net->nodes[in].level+1);
-   }
+  printf("entre a agregar vecinos de %u\n", in);
+  j = 0;
+  max = nodes_forw_get_length(net->nodes, in);
+
+  for (i = j; i< max; i++) {
+    k = nodes_nth_forw_neighb(net->nodes, in, i);
+    if (edges_flow(net->edges, in, k)
+	< edges_capacity(net->edges, in, k)) {
+      net_queue_bfs_add(net->nodes, Qq, k, 
+			nodes_get_level(net->nodes, in)+1);
+
+    }
+  }
+  j = 0;
+  max = nodes_back_get_length(net->nodes, in);
+  for (i = j; i<max; i++) {
+    k = nodes_nth_back_neighb(net->nodes, in, i);
+    if (edges_flow(net->edges, k, in) > 0 
+	&& k != in) {
+      net_queue_bfs_add(net->nodes, Qq, k, 
+			nodes_get_level(net->nodes, in)+1);
+
+    }
+  }
 }
 
 
@@ -723,10 +468,22 @@ void out_path_destroy(output out){
   out->n_pathsNA=0;
 }
 
+void print_nodes(Net net) {
+  node n;
+  uint i;
+  for (i = 0; i < nodes_get_length(net->nodes); i++){
+    n = nodes_get_node(net->nodes, i);
+    printf("i:%u level:%u b:%u\n", i, 
+	   node_get_level(n), 
+	   node_get_balance(n));
+      
+  }
+}
 
 
 int dinic(Net net, output * outp, int flags){
   uint v = 0, x = 0, y = 0, r = 0, end = 0;
+  uint t = 1;
   int i = 0; 
   bool stop_flag = false;
   output out=*outp;
@@ -734,80 +491,95 @@ int dinic(Net net, output * outp, int flags){
   
   if(!out) out = createout();
 
-  out->net=net;
+  out->net = net;
+  for(i = 0; !end ; i++){
 
-  for(i=0; !end ; i++){
     v = 0;
     stop_flag = false; 
-    net_aux_reset(net);
+    nodes_aux_reset(net->nodes);
     net_aux_new(net);
-    end = net->nodes[1].level == (uint)-1;
+
+
+    end = (nodes_get_level(net->nodes, t) == (uint)-1);
     while(!stop_flag && !end){
+      print_flow_table(net);
+    
       p = path_new();
       x = 0;
 
       while(( x != 1) && !stop_flag){
-	if ((y = net_neighb_forw(net,x))){/*Avanzar en vecinos forward*/
-	  set_balance(net,y,1);
-	  set_ancestor(net,y,x);
+
+	if ((y = net_neighb_forw(net, x))){
+	  printf("entre forw %u\n", y);
+	  nodes_set_balance(net->nodes, y, 1);
+	  nodes_set_ancestor(net->nodes, y, x);
 	  x = y;
 	}
-	else if ((y = net_neighb_back(net,x))){/*Avanzar en vecinos backward*/
-	  set_balance(net,y,0);
-	  set_ancestor(net,y,x);
+	else if ((y = net_neighb_back(net, x))){
+	  printf("entre back %u\n", y);
+	  nodes_set_balance(net->nodes, y, 0);
+	  nodes_set_ancestor(net->nodes, y, x);
 	  x = y;
 	}
-	else if (x){//x!=s /*Retroceder*/
-	  y = ancestor(net,x);
-	  net_del_neighb(net,y,balance(net,x));
+	else if (x){
+	  y = nodes_get_ancestor(net->nodes, x);
+	  printf("borro %u\n", y);
+
+	  net_del_neighb(net->nodes, y, 
+			 nodes_get_balance(net->nodes, x));
 	  x = y;
 	}
 	else stop_flag = true;
       }
-
-
       if (x == 1) {/*Aumentar*/
-    	y = 1,r = -1; // -1 porque es unsigned asi que -1 es el maximo valor
+    	y = 1,r = -1; 
 	while(y != 0){
-	  x = ancestor(net,y);
-	  if(balance(net,y)){
-	    r = minx(C(x,y,net)-f(x,y,net),r);
-	  }
-	  else{
-	    r= minx(f(y,x,net),r);
+	  x = nodes_get_ancestor(net->nodes, y);
+	  if(nodes_get_balance(net->nodes, y)){
+	    r = minx(edges_capacity(net->edges, x, y)
+		     -edges_flow(net->edges, x, y), r);
+	  } else {
+	    r= minx(edges_flow(net->edges, y, x),r);
 	  }
 	  y = x;
 	}
 	
 	y = 1, v += r;
-	
+
+	printf("flow sended %u\n", r);
 
 	while (y != 0){
-	  x = ancestor(net,y);
-	  path_add_node(&p,y,balance(net,y));
+	  x = nodes_get_ancestor(net->nodes, y);
+	  path_add_node(p, y, 
+			nodes_get_balance(net->nodes, y));
 
-	  if (balance(net,y)){
-	    setf(x,y,net,f(x,y,net)+r);
+	  if (nodes_get_balance(net->nodes, y)){
+	    edges_update_flow(net->edges, x, y, 
+			      edges_flow(net->edges, x, y) 
+			      + r);
 
-	    if(f(x,y,net) == C(x,y,net)){
-	      net_del_neighb(net,x,1);
+	    if(edges_flow(net->edges, x, y) 
+	       == edges_capacity(net->edges, x, y)){
+	      net_del_neighb(net->nodes, x, 1);
 	    }
-	  }
+	  } 
 	  else {
-	    setf(y,x,net,f(y,x,net)-r);
-	    if(f(y,x,net) == 0){
-	      net_del_neighb(net,x,0);
+	    edges_update_flow(net->edges, y, x, 
+			      edges_flow(net->edges, y, x)
+			      - r);
+	    if(edges_flow(net->edges, y, x) == 0){
+	      net_del_neighb(net->nodes, x, 0);
 	    }
 	  }
 	  y = x;
 	}
-	path_add_node(&p,y,1);
-	path_set_flow(p,r);
-	addpathdinic(p,out);
+	path_add_node(p, y, 1);
+	path_update_flow(p, r);
+	addpathdinic(p, out);
       }
+      path_destroy(p);
     }
   
-    path_destroy(p);
     out->flow += v;
     
 
@@ -815,11 +587,12 @@ int dinic(Net net, output * outp, int flags){
       if(!end) print_pathsdinic(out, flags, i+1);
     }
 
-    net_aux_reset(net);
+    nodes_aux_reset(net->nodes);
     if(!end){
       net_aux_new(net);
-      end = (net->nodes[1].level == (uint)-1);
-      net_aux_reset(net);
+      print_nodes(net);
+      end = (nodes_get_level(net->nodes, t) == (uint)-1);
+      nodes_aux_reset(net->nodes);
     }
     out_path_destroy(out);    
   }
@@ -842,12 +615,10 @@ int dinic(Net net, output * outp, int flags){
 
 int check_options(int argc, char **argv) {
   int c = 0;
-  int digit_optind = 0;
   int flags = 0;
 
   while (1) {
-    int this_option_optind = optind?optind:1;
-    int option_index = 0;
+      int option_index = 0;
 
     static struct option long_options[] = {
       {"flujo", no_argument, 0, 'f'},
@@ -897,44 +668,53 @@ int check_options(int argc, char **argv) {
   return flags;
 }
 
-void print_flow_table(output out) {
-  Net net = out->net;
-  node n;
+void print_flow_table(Net net) {
   uint x ,y;
-  uint i, j, k;
+  uint i;
+  nodes_list nodes = net->nodes;
+  edges_list edges = net->edges;
 
   printf("\nFlujo Maximal:\n\n");
   
-  for (x = 0; x < net->n_nodes; x++) {
-    n = net->nodes[x];
-    for (j = 0; j < n.n_neighbs_forw; j++) {
-      y = n.neighbs_forw[j];
-      for (k = 0; k < net->n_xplusy[x+y]; k++) {
-	if (net->edges[x+y][k].x == x 
-	    && net->edges[x+y][k].y == y) {
-	  printf("%u\t%u\t%u (%u)\n", 
-		 net->edges[x+y][k].x,
-		 net->edges[x+y][k].y,
-		 net->edges[x+y][k].f,
-		 net->edges[x+y][k].C
-		 );
-	}
-      }
+  for (x = 0; x < nodes_get_length(nodes); x++) {
+    for (i = 0; i<nodes_forw_get_length(nodes, x); 
+	 i++){
+      y = nodes_nth_forw_neighb(nodes, x, i);
+      printf("%u\t%u\t%u (%u)\n", x, y,
+	     edges_flow(edges, x, y),
+	     edges_capacity(edges, x, y));
     }
   }
   
   printf("\n");
 }
 
-int main(int argc, char ** argv){
-  Net network=NULL;
-  int flags=0, times=0, end=0, i=0, runs=0;
-  int t[2];
-  time_t t1, t2, t3;
+void print_adj_table(Net net) {
+  uint x ,y;
+  uint i;
+  nodes_list nodes = net->nodes;
 
-  output out=NULL;
-
+  printf("\nAdj table:\n\n");
   
+  for (x = 0; x < nodes_get_length(nodes); x++) {
+    for (i = 0; i<nodes_forw_get_length(nodes, x); 
+	 i++){
+      y = nodes_nth_forw_neighb(nodes, x, i);
+      printf("%u\t%u\n", x, y);
+    }
+  }
+  
+  printf("\n");
+}
+
+
+int main(int argc, char ** argv){
+  Net network = NULL;
+  int flags = 0, runs = 0;
+  int t[2];
+
+  output out = NULL;
+
   flags = check_options(argc, argv);
 
   network = read_data();
@@ -944,17 +724,9 @@ int main(int argc, char ** argv){
     return -1;
   }
 
-  end = dinic(network, &out, flags);
+  dinic(network, &out, flags);
   printout(out,flags, t, runs);
 
   return 0;
 }
 
-
-void print_minimal_cut(output out) {
-  Net net = out->net;
-
-  printf("Corte: {0");
-
-  
-}

@@ -36,7 +36,9 @@ void queue_bfs_push(queue_bfs q, uint n) {
 
 
 void queue_bfs_destroy(queue_bfs queue){
+  /*
   free(queue);
+  */
 }
 
 
@@ -54,7 +56,7 @@ uint queue_bfs_pop(queue_bfs q) {
 
 
 bool queue_bfs_is_full(queue_bfs q) {
-  return ((q->end-q->start) == q->size);
+  return ((q->end - q->start) == q->size);
 }
 
 void queue_bfs_clear(queue_bfs q) {
