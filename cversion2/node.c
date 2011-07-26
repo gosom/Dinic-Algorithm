@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <string.h>
 #include "node.h"
 
 #define SOURCE_ID 0
@@ -137,8 +138,15 @@ void nodes_destroy(nodes_list n) {
 }
 
 void nodes_realloc(nodes_list n, uint size) {
-  n->nodes_list = realloc(n->nodes_list, size);
-  n->ids = realloc(n->ids, size);
+  uint old_size = n->size, i;
+  n->nodes_list = realloc(n->nodes_list, size
+			  * sizeof(node));
+  for (i = old_size; i < size; i++) {
+    n->nodes_list[i] = calloc(1, sizeof(struct node));
+  }
+  n->ids = realloc(n->ids, size * sizeof(uint));
+  memset(&n->ids[n->size], 0, (size - n->size)
+	 *sizeof(uint));
   n->size = size;
 }
 

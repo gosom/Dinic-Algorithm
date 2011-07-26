@@ -163,8 +163,8 @@ uint net_neighb_back(Net net, uint x){
 
 
 void net_destroy(Net net){
-  free(net->edges);
-  free(net->nodes);
+  edges_destroy(net->edges);
+  nodes_destroy(net->nodes);
   free(net);
 }  
 
@@ -316,7 +316,7 @@ Net read_data() {
     nodes_reserved = NODES_RESERVED,
     x = 0,y = 0,c = 0;
   
-  freopen ("../pyversion/tests/networks/net02.txt", "r", stdin);
+  freopen ("../pyversion/tests/networks/complex5000.txt", "r", stdin);
 
   net = net_new();
 
@@ -332,7 +332,7 @@ Net read_data() {
     }
     if (nodes_get_length(net->nodes)*2+2 
 	>= edges_reserved){
-      edges_reserved *= 2;
+      edges_reserved = edges_reserved * 2 + 2;
       edges_realloc(net->edges, edges_reserved);
     }
   }
@@ -388,7 +388,6 @@ void net_aux_new(Net net){
   
   do {
     i = queue_bfs_pop(Q);
-    printf("queue pop %u\n", i);
     if (nodes_get_level(net->nodes, i) 
 	< nodes_get_level(net->nodes, t))
       net_queue_bfs_add_neighbs(&Q, net, i);
@@ -431,7 +430,6 @@ void net_queue_bfs_add_neighbs(queue_bfs *Qq,
   uint i, k, j, max;
   
 
-  printf("entre a agregar vecinos de %u\n", in);
   j = 0;
   max = nodes_forw_get_length(net->nodes, in);
 
@@ -502,35 +500,34 @@ int dinic(Net net, output * outp, int flags){
 
     end = (nodes_get_level(net->nodes, t) == (uint)-1);
     while(!stop_flag && !end){
-      print_flow_table(net);
     
       p = path_new();
       x = 0;
 
+
       while(( x != 1) && !stop_flag){
 
 	if ((y = net_neighb_forw(net, x))){
-	  printf("entre forw %u\n", y);
 	  nodes_set_balance(net->nodes, y, 1);
 	  nodes_set_ancestor(net->nodes, y, x);
 	  x = y;
 	}
 	else if ((y = net_neighb_back(net, x))){
-	  printf("entre back %u\n", y);
 	  nodes_set_balance(net->nodes, y, 0);
 	  nodes_set_ancestor(net->nodes, y, x);
 	  x = y;
 	}
 	else if (x){
 	  y = nodes_get_ancestor(net->nodes, x);
-	  printf("borro %u\n", y);
-
 	  net_del_neighb(net->nodes, y, 
 			 nodes_get_balance(net->nodes, x));
 	  x = y;
 	}
 	else stop_flag = true;
       }
+
+
+
       if (x == 1) {/*Aumentar*/
     	y = 1,r = -1; 
 	while(y != 0){
@@ -545,8 +542,6 @@ int dinic(Net net, output * outp, int flags){
 	}
 	
 	y = 1, v += r;
-
-	printf("flow sended %u\n", r);
 
 	while (y != 0){
 	  x = nodes_get_ancestor(net->nodes, y);
@@ -590,7 +585,6 @@ int dinic(Net net, output * outp, int flags){
     nodes_aux_reset(net->nodes);
     if(!end){
       net_aux_new(net);
-      print_nodes(net);
       end = (nodes_get_level(net->nodes, t) == (uint)-1);
       nodes_aux_reset(net->nodes);
     }
