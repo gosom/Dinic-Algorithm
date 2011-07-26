@@ -1,10 +1,8 @@
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
+#include "queue_bfs.h"
 #include "node.h"
-
-#define SOURCE_ID 0
-#define TARGET_ID 1
-
 
 struct node{
   uint level; 
@@ -246,4 +244,47 @@ void nodes_aux_reset(nodes_list nodes){
 
   for(i = 1; i < nodes_get_length(nodes); i++)
     nodes_set_level(nodes, i, (uint)-1);
+}
+
+
+void nodes_del_neighb(nodes_list nodes, 
+		    uint x, uint bal){
+  if(bal)
+    nodes_del_forw(nodes, x);
+  else
+    nodes_del_back(nodes, x);
+}
+
+
+
+void nodes_queue_bfs_add(nodes_list nodes, 
+		       queue_bfs *Qq, 
+		       uint i,  uint level){
+  queue_bfs Q=*Qq;
+
+  if (nodes_get_level(nodes, i) == (uint)-1){
+    queue_bfs_push(Q, i);
+    nodes_set_level(nodes, i, level);
+  }
+}
+
+
+
+
+void print_path(nodes_list nodes, path p, uint *flowp){
+  int i;
+
+  printf("0 ");
+  for(i = path_length(p)-2; 0 < i ; i--){
+    if(path_nth_balance(p, i)){
+      printf("%u ",
+	     nodes_get_id(nodes, 
+			  path_nth_name(p, i)));
+    } else
+      printf("<- %u ",
+	     nodes_get_id(nodes, 
+			   path_nth_name(p, i)));
+  }
+  printf("1 (flujo transportado: %u)\n", path_flow(p));
+  *flowp = path_flow(p);
 }

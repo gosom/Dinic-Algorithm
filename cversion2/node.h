@@ -1,11 +1,11 @@
 #ifndef _NODE_H_
 #define _NODE_H_
 
+#include "path.h"
+#include "utils.h"
+
 typedef struct node * node;
 typedef struct nodes * nodes_list;
-
-typedef unsigned int uint;
-typedef unsigned short int usint;
 
 
 uint node_get_level(node n);
@@ -63,4 +63,15 @@ uint nodes_nth_forw_neighb(nodes_list n, uint x,
 			  uint i);
 uint nodes_nth_back_neighb(nodes_list n, uint x, 
 			  uint i);
+
+
+void nodes_del_neighb(nodes_list nodes, 
+		      uint x, uint bal);
+
+
+void nodes_queue_bfs_add(nodes_list nodes, 
+		       queue_bfs *Qq, uint i, 
+		       uint level); 
+void print_path(nodes_list nodes, path p, uint *flowp);
+
 #endif

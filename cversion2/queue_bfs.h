@@ -3,9 +3,9 @@
 
 #include <stdlib.h>
 #include <stdbool.h>
+#include "utils.h"
 
 typedef struct queue_bfs *queue_bfs; 
-typedef unsigned int uint;
 
 queue_bfs queue_bfs_new(uint n);
 void queue_bfs_push(queue_bfs q, uint n);

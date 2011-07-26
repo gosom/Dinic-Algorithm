@@ -4,7 +4,6 @@
 #include <stdio.h>
 #include "edge.h"
 
-
 struct edge{
   uint x:14;
   uint y:14;
