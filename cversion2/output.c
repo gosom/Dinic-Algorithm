@@ -46,8 +46,7 @@ void out_add_path(path S, output out){
 
 
 
-void print_output(output out, int flags, 
-	      int time[], int runs){
+void print_output(output out, int flags){
 
   if ((flags&FLUJO))
     print_flow_table(out->net);

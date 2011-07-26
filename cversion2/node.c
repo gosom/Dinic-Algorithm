@@ -288,3 +288,18 @@ void print_path(nodes_list nodes, path p, uint *flowp){
   printf("1 (flujo transportado: %u)\n", path_flow(p));
   *flowp = path_flow(p);
 }
+
+
+
+
+void print_nodes(nodes_list nodes) {
+  node n;
+  uint i;
+  for (i = 0; i < nodes_get_length(nodes); i++){
+    n = nodes_get_node(nodes, i);
+    printf("i:%u level:%u b:%u\n", i, 
+	   node_get_level(n), 
+	   node_get_balance(n));
+      
+  }
+}

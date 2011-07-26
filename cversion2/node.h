@@ -74,4 +74,6 @@ void nodes_queue_bfs_add(nodes_list nodes,
 		       uint level); 
 void print_path(nodes_list nodes, path p, uint *flowp);
 
+void print_nodes(nodes_list nodes);
+
 #endif

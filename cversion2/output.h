@@ -17,7 +17,7 @@ void out_add_path(path S, output out);
 
 uint out_mincut_capacity(output out); 
 
-void print_output(output out, int flags, int time[], int runs); 
+void print_output(output out, int flags); 
 
 
 output out_new(void);

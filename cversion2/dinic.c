@@ -33,7 +33,7 @@ Net read_data() {
   nodes_list nodes = NULL;
   edges_list edges = NULL;
 
-  freopen ("../pyversion/tests/networks/complex5000.txt", "r", stdin);
+  freopen ("../pyversion/tests/networks/net02.txt", "r", stdin);
 
   net = net_new();
   nodes = net_get_nodes(net);
@@ -66,20 +66,6 @@ Net read_data() {
 }
 
 
-
-
-
-void print_nodes(nodes_list nodes) {
-  node n;
-  uint i;
-  for (i = 0; i < nodes_get_length(nodes); i++){
-    n = nodes_get_node(nodes, i);
-    printf("i:%u level:%u b:%u\n", i, 
-	   node_get_level(n), 
-	   node_get_balance(n));
-      
-  }
-}
 
 
 int dinic(Net net, output * outp, int flags){
@@ -273,8 +259,6 @@ int check_options(int argc, char **argv) {
 int main(int argc, char ** argv){
   Net network = NULL;
   int flags = 0, runs = 0;
-  int t[2];
-
   output out = NULL;
 
   flags = check_options(argc, argv);
@@ -287,7 +271,7 @@ int main(int argc, char ** argv){
   }
 
   dinic(network, &out, flags);
-  print_output(out,flags, t, runs);
+  print_output(out,flags);
 
   return 0;
 }
