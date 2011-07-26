@@ -117,7 +117,7 @@ void net_aux_new(Net net){
 
   } while (!queue_bfs_is_empty(Q));
 
-  nodes_reset_start(net->nodes);/*Resetea n_start_forw y n_xstart_back*/
+  nodes_reset_start(net->nodes);
   queue_bfs_destroy(Q);
 }
 

@@ -6,9 +6,10 @@
 
 typedef struct output * output;
 
-
+void out_print_cut(output out);
 
 void out_set_net(output out, Net net);
+
 void out_path_destroy(output out);
 
 void print_paths(output out,int flags, int na);
@@ -19,10 +20,10 @@ uint out_mincut_capacity(output out);
 
 void print_output(output out, int flags); 
 
-
 output out_new(void);
 
 void out_set_flow(output out, uint flow);
+
 uint out_get_flow(output out);
 
 #endif 

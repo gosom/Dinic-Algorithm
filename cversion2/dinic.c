@@ -12,7 +12,6 @@
 #include "network.h"
 #include "utils.h"
 
-int dinic(Net net, output * outp, int flags);
 
 
 /**
@@ -98,7 +97,6 @@ int dinic(Net net, output * outp, int flags){
     
       p = path_new();
       x = 0;
-
 
       while(( x != 1) && !stop_flag){
 

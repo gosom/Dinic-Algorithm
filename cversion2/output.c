@@ -51,6 +51,9 @@ void print_output(output out, int flags){
   if ((flags&FLUJO))
     print_flow_table(out->net);
   printf("Valor del flow: %i\n",out->flow);
+
+  if ((flags&CORTE))
+    out_print_cut(out);
 }
 
 
@@ -83,4 +86,34 @@ void out_set_flow(output out, uint flow) {
 
 uint out_get_flow(output out) {
   return out->flow;
+}
+
+
+void out_print_cut(output out) {
+  Net net = out->net;
+  queue_bfs q = net_queue_bfs_new(net);
+  uint x, y, length, i;
+  nodes_list nodes = net_get_nodes(net);
+  edges_list edges = net_get_edges(net);
+  
+
+  nodes_reset_start(nodes);
+
+  printf("Cut={");
+
+  do {
+    x = queue_bfs_pop(q);
+    
+    if (x)
+      printf(", %u", x);
+    else
+      printf("%u", x);
+
+    nodes_queue_bfs_add_neighbs(&q, net, x);
+    
+  } while (!queue_bfs_is_empty(q));
+  
+  printf("}\n");
+
+  queue_bfs_destroy(q);
 }
