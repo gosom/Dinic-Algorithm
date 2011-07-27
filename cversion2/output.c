@@ -28,7 +28,7 @@ void print_paths(output out,int flags, int na){
 
 	printf("N.A. %d:\n", na);
 	for(i=0; i<out->n_paths; i++){
-		print_path(net_get_nodes(out->net), 
+		nodes_print_path(net_get_nodes(out->net), 
 				   out->paths[i], &flow);
 		tot_flow += flow;
 	}
