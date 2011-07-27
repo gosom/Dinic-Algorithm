@@ -26,9 +26,9 @@ void print_flow_table(Net net);
 uint net_add_node(Net network, uint n); 
 void net_add_nodes(Net network, uint *x, uint *y);
 void net_add_edge(Net network, uint x,uint y, uint C);
-void nodes_queue_bfs_add_neighbs(queue_bfs *Qq, 
-			       Net net, 
-				 uint in);
+void net_queue_bfs_add_neighbs(queue_bfs *Qq, 
+							   Net net, 
+							   uint in);
 
 
 #endif

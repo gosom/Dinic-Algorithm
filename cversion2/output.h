@@ -6,6 +6,8 @@
 
 typedef struct output * output;
 
+void out_destroy(output out);
+
 void out_print_cut(output out);
 
 void out_set_net(output out, Net net);

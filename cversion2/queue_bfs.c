@@ -4,62 +4,61 @@ typedef struct bfs_elem bfs_elem;
 
 
 struct bfs_elem{
-  uint id:16;
+	uint id:16;
 };
 
 
 struct queue_bfs{
-  unsigned size;
-  unsigned end;
-  unsigned start;
-  bfs_elem tail[0];
+	unsigned size;
+	unsigned end;
+	unsigned start;
+	bfs_elem *tail;
 };
 
 
 queue_bfs queue_bfs_new(uint n) {
-  queue_bfs q = NULL;
+	queue_bfs q = NULL;
 
-  q = malloc(sizeof(struct queue_bfs) 
-	     + n * sizeof(struct bfs_elem));
-  q->start = 0;
-  q->end = 0;
-  q->size = n;
+	q = malloc(sizeof(struct queue_bfs));
+	q->tail = calloc(n, sizeof(struct bfs_elem));
+	q->start = 0;
+	q->end = 0;
+	q->size = n;
 
-  return q;
+	return q;
 }
 
 
 void queue_bfs_push(queue_bfs q, uint n) {
-  q->tail[q->end].id = n;
-  q->end++;
+	q->tail[q->end].id = n;
+	q->end++;
 }
 
 
-void queue_bfs_destroy(queue_bfs queue){
-  /*
-  free(queue);
-  */
+void queue_bfs_destroy(queue_bfs q){
+	free(q->tail);
+	free(q);
 }
 
 
 bool queue_bfs_is_empty(queue_bfs q) {
-  return (q->start == q->end);
+	return (q->start == q->end);
 }
 
 
 uint queue_bfs_pop(queue_bfs q) {
-  uint r = 0;
-  r = q->tail[q->start].id;
-  q->start++;
-  return r;
+	uint r = 0;
+	r = q->tail[q->start].id;
+	q->start++;
+	return r;
 }
 
 
 bool queue_bfs_is_full(queue_bfs q) {
-  return ((q->end - q->start) == q->size);
+	return ((q->end - q->start) == q->size);
 }
 
 void queue_bfs_clear(queue_bfs q) {
-  q->start = 0;
-  q->end = 0;
+	q->start = 0;
+	q->end = 0;
 }

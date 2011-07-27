@@ -126,14 +126,22 @@ nodes_list nodes_new(uint size) {
 }
 
 
+void node_destroy(node n) {
+  free(n->neighbs_forw);
+  free(n->neighbs_back);
+  free(n);
+}
+
+
 void nodes_destroy(nodes_list n) {
   uint i;
-  for (i = 0; i < n->n_nodes; i++)
-    free(n->nodes_list[i]);
+  for (i = 0; i < n->size; i++)
+    node_destroy(n->nodes_list[i]);
   free(n->nodes_list);
   free(n->ids);
   free(n);
 }
+
 
 void nodes_realloc(nodes_list n, uint size) {
   uint old_size = n->size, i;

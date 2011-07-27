@@ -2,13 +2,10 @@
 #define _PATH_H_
 
 #include <stdlib.h>
+#include "utils.h"
 
 typedef struct path * path;
 typedef struct snode * snode;
-
-typedef unsigned int uint;
-typedef unsigned short int usint;
-
 
 path path_new();
 void path_destroy(path p);
