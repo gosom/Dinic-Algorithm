@@ -217,13 +217,13 @@ void dinic(Net net, output * out_p, int flags){
 					an_flow += r;
 					p = path_new();
 					augment(net, p, r);
-					out_add_path(p, out);
+					out_add_path(out, p);
 				} 
 				else break;
 			}
 
 			if((flags & VERBOSE)){
-				print_paths(out, flags, i+1);
+				out_print_paths(out, i+1);
 			}
 		}
 
@@ -314,7 +314,7 @@ int main(int argc, char ** argv)
 
 	dinic(network, &out, flags);
 
-	print_output(out,flags);
+	out_print(out,flags);
 
 	out_destroy(out);
 	net_destroy(network);

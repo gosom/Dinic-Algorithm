@@ -14,15 +14,15 @@ void out_set_net(output out, Net net);
 
 void out_path_destroy(output out);
 
-void print_paths(output out,int flags, int na);
+void out_print_paths(output out, int na);
 
-void out_add_path(path S, output out);
+void out_add_path(output out, path p);
 
 uint out_mincut_capacity(output out); 
 
-void print_output(output out, int flags); 
+void out_print(output out, int flags); 
 
-output out_new(void);
+output out_new();
 
 void out_set_flow(output out, uint flow);
 
