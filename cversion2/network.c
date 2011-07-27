@@ -9,15 +9,25 @@ struct net {
 	edges_list edges;
 };
 
+/**
+ * Obtiene la lista de nodos del network.
+ * @param net El network.
+ * @returns La lista de nodos.
+ */
 
 nodes_list net_get_nodes(Net net) {
 	return net->nodes;
 }
 
+/**
+ * Obtiene la lista de nodos del network.
+ * @param net El network.
+ * @returns La lista de nodos.
+ */
+
 edges_list net_get_edges(Net net) {
 	return net->edges;
 }
-
 
 
 /**
@@ -47,20 +57,33 @@ Net net_new() {
 }
 
 
+/**
+ * Libera la memoria usada por el network.
+ * @param net El network.
+ */
+
 void net_destroy(Net net){
 	edges_destroy(net->edges);
 	nodes_destroy(net->nodes);
 	free(net);
+	net = NULL;
 }  
 
 
-
-
+/**
+ * Devuelve el indice de un vecino forward de @x que aun no ha sido
+ * agregado al network auxiliar y por el cual podemos aumentar mandar
+ * flujo.
+ * @param net El network.
+ * @param x El indice del nodo cuyo vecino queremos encontrar.
+ * @returns El indice del vecino del nodo si este existe, sino
+ * devuelve cero.
+ */
 
 uint net_neighb_forw(Net net, uint x){
 	uint y = 0, i;
 	uint n_forw = nodes_forw_get_length(net->nodes, x);
-	uint start_forw=nodes_forw_get_start(net->nodes, x);
+	uint start_forw = nodes_forw_get_start(net->nodes, x);
 
 	for (i = start_forw; i < n_forw; i++) {
 		y = nodes_nth_forw_neighb(net->nodes, x, i);
@@ -70,7 +93,6 @@ uint net_neighb_forw(Net net, uint x){
 			< edges_capacity(net->edges, x, y)) {
 			break;
 		}
-
 		else  {
 			nodes_del_forw(net->nodes, x);
 			y = 0;
@@ -82,6 +104,15 @@ uint net_neighb_forw(Net net, uint x){
 
 
 
+/**
+ * Devuelve el indice de un vecino backward de @x que aun no ha sido
+ * agregado al network auxiliar y por el cual podemos aumentar mandar
+ * flujo.
+ * @param net El network.
+ * @param x El indice del nodo cuyo vecino queremos encontrar.
+ * @returns El indice del vecino del nodo si este existe, sino
+ * devuelve cero.
+ */
 
 uint net_neighb_back(Net net, uint x){
 	uint y = 0, i;
@@ -103,6 +134,10 @@ uint net_neighb_back(Net net, uint x){
 	return y;
 }
 
+/**
+ * Crea un network auxiliar corriendo BFS sobre el network.
+ * @param net EL network.
+ */
 
 void net_aux_new(Net net){
 	uint i, t = 1;
@@ -112,7 +147,7 @@ void net_aux_new(Net net){
 		i = queue_bfs_pop(Q);
 		if (nodes_get_level(net->nodes, i) 
 			< nodes_get_level(net->nodes, t))
-			net_queue_bfs_add_neighbs(&Q, net, i);
+			net_queue_bfs_add_neighbs(net, &Q, i);
 		else break;
 
 	} while (!queue_bfs_is_empty(Q));
@@ -121,7 +156,12 @@ void net_aux_new(Net net){
 	queue_bfs_destroy(Q);
 }
 
-
+/**
+ * Crea una cola con suficiente espacio para guardar todos los nodos
+ * del network y coloca el nodo s en ella.
+ * @param net El network.
+ * @returns La cola creada.
+ */
 queue_bfs net_queue_bfs_new(Net net){
 	queue_bfs result;
 	uint s = 0;
@@ -132,9 +172,13 @@ queue_bfs net_queue_bfs_new(Net net){
 	return result;
 }
 
+/**
+ * Imprime una tabla con los lados del network, sus flujos 
+ * y capacidades.
+ * @param net El network.
+ */
 
-
-void print_flow_table(Net net) {
+void net_print_flow_table(Net net) {
 	uint x ,y;
 	uint i;
 	nodes_list nodes = net->nodes;
@@ -156,32 +200,12 @@ void print_flow_table(Net net) {
 }
 
 
-void print_adj_table(Net net) {
-	uint x ,y;
-	uint i;
-	nodes_list nodes = net->nodes;
-
-	printf("\nAdj table:\n\n");
-  
-	for (x = 0; x < nodes_get_length(nodes); x++) {
-		for (i = 0; i<nodes_forw_get_length(nodes, x); 
-			 i++){
-			y = nodes_nth_forw_neighb(nodes, x, i);
-			printf("%u\t%u\n", x, y);
-		}
-	}
-  
-	printf("\n");
-}
-
-
-
 
 /**
  * Agrega un nodo al network.
  * @param net El network.
- * @param n Puntero al id del nodo a agregar.
- * @returns n Devolvemos en n la posicion donde fue agregado el nodo
+ * @param id Id del nodo a agregar.
+ * @returns Devolvemos la posicion donde fue agregado el nodo
  */
 
 uint  net_add_node(Net net, uint id){
@@ -194,12 +218,12 @@ uint  net_add_node(Net net, uint id){
 /**
  * Agrega los nodos pasados como parametros.
  * @param net El network.
- * @param x Puntero al id del nodo a agregar.
- * @param y Puntero al id del nodo a agregar.
+ * @param x Puntero al id del nodo x a agregar.
+ * @param y Puntero al id del nodo y a agregar.
  * @returns x Puntero a la posicion donde 
- * fue agregado el nodo.
+ * fue agregado el nodo x.
  * @returns y Puntero a la posicion donde 
- * fue agregado el nodo.
+ * fue agregado el nodo y.
  */
 
 void net_add_nodes(Net net, uint *x, uint *y){
@@ -242,9 +266,15 @@ void net_add_edge(Net network, uint x,uint y, uint C){
 }
 
 
+/**
+ * Agrega los vecinos de @in a la cola y al network auxiliar.
+ * @param net El network.
+ * @param Qq Puntero a la cola donde agregamos los vecinos.
+ * @param in Indice del nodo cuyos vecinos queremos agregar.
+ */
 
-void net_queue_bfs_add_neighbs(queue_bfs *Qq, 
-							   Net net, 
+void net_queue_bfs_add_neighbs(Net net,
+							   queue_bfs *Qq, 
 							   uint in){
 	uint i, k, j, max;
 

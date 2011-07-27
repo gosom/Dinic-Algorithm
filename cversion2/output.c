@@ -50,8 +50,9 @@ void out_add_path(path p, output out){
 void print_output(output out, int flags){
 
 	if ((flags&FLUJO))
-		print_flow_table(out->net);
-	printf("Valor del flow: %i\n",out->flow);
+		net_print_flow_table(out->net);
+
+	printf("Valor del flow: %i\n", out->flow);
 
 	if ((flags&CORTE))
 		out_print_cut(out);
@@ -119,7 +120,7 @@ void out_print_cut(output out) {
 		else
 			printf("%u", x);
 
-		net_queue_bfs_add_neighbs(&q, net, x);
+		net_queue_bfs_add_neighbs(net, &q, x);
     
 	} while (!queue_bfs_is_empty(q));
   

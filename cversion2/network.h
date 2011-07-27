@@ -21,13 +21,12 @@ uint net_neighb_back(Net net, uint x);
 void net_aux_new(Net net); 
 
 queue_bfs net_queue_bfs_new(Net net);
-void print_adj_table(Net net);
-void print_flow_table(Net net);
+void net_print_flow_table(Net net);
 uint net_add_node(Net network, uint n); 
 void net_add_nodes(Net network, uint *x, uint *y);
 void net_add_edge(Net network, uint x,uint y, uint C);
-void net_queue_bfs_add_neighbs(queue_bfs *Qq, 
-							   Net net, 
+void net_queue_bfs_add_neighbs(Net net, 
+							   queue_bfs *Qq, 
 							   uint in);
 
 
