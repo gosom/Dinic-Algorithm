@@ -58,21 +58,24 @@ Net read_data(char *file_name)
 			edges_realloc(edges, edges_reserved);
 		}
 	}
-	
-
-	if(readed < 3 && readed >= 0){
-		net_destroy(net);
-	}
 
 	return net;
 }
 
-uint advance(Net net,  bool * stop_flag_p) 
+/**
+ * Avanza a traves del network auxiliar creando un camino.
+ * Debe llamarse despues de net_aux_new.
+ * @see net_aux_new
+ * @param net El network en el que se busca el camino de s a t.
+ * @returns El indice del ultimo nodo del camino (1 si es t).
+ */
+
+uint advance(Net net) 
 {
 	nodes_list nodes = net_get_nodes(net);
-	uint x = 0, y = 0;
+	uint x = 0, y = 0, t = 1;
 
-	while(( x != 1) && !*stop_flag_p){
+	while(x != t){
 
 		if ((y = net_neighb_forw(net, x))){
 			nodes_set_balance(nodes, y, 1);
@@ -90,10 +93,17 @@ uint advance(Net net,  bool * stop_flag_p)
 			nodes_get_balance(nodes, x));
 			x = y;
 		}
-		else *stop_flag_p = true;
+		else break;
 	}
 	return x;
 }
+
+/**
+ * Calcula la capacidad residual del camino en el network.
+ * Debe llamarse despues de advance.
+ * @see advance
+ * @param net Network
+ */
 
 uint residual_capacity(Net net) 
 {
@@ -114,6 +124,13 @@ uint residual_capacity(Net net)
 	return r;
 }
 
+/**
+ * Aumenta el flujo en el network y coloca los nodos
+ * del camino en path. Cumple dos funciones a fines de optimizar.
+ * @param net Network.
+ * @param p Path ya creado donde guardamos los nodos.
+ * @param flow Cantidad de flujo que agregaremos al network.
+ */
 
 void augment(Net net, path p, uint flow) 
 {
@@ -146,6 +163,11 @@ void augment(Net net, path p, uint flow)
 	path_update_flow(p, flow);
 }
 
+/**
+ * Devuelve True si t esta en el network auxiliar.
+ * @param n Lista de nodos con datos del network auxiliar.
+ * @returns True si t esta en el network auxiliar.
+ */
 
 bool is_t_in_an(nodes_list n) 
 {
@@ -153,9 +175,21 @@ bool is_t_in_an(nodes_list n)
 	return (nodes_get_level(n, t) == UINT_MAX);
 }
 
+/**
+ * Corre el algoritmo de Dinic sobre el network.
+ * Los resultados del algoritmo son guardados en 
+ * la estructura output.
+ * @param net El network.
+ * @param out_p La estructura donde guardamos los datos
+ * de la ejecucion del algoritmo.
+ * @param flags Opciones del programa, permite imprimir los
+ * caminos encontrados.
+ * @see net_aux_new, advance, augment, residual_capacity
+ */
+
 void dinic(Net net, output * out_p, int flags){
 	uint an_flow = 0, x = 0, r = 0, t = 1, i = 0;
-	bool stop_flag = false, end = false;
+	bool end = false;
 	output out = *out_p;
 	path p = NULL;
 	nodes_list nodes = NULL;
@@ -166,28 +200,31 @@ void dinic(Net net, output * out_p, int flags){
 	for(i = 0; !end ; i++) {
 
 		an_flow = 0;
-		stop_flag = false;
 
 		nodes_aux_reset(nodes);
 		net_aux_new(net);
 
 		end = is_t_in_an(nodes);
+		
+		if (!end) {
+			
+			while(true) {
 
-		while(!stop_flag && !end) {
+				x = advance(net); /* ADVANCE */
 
-			x = advance(net, &stop_flag); /* ADVANCE */
+				if (x == t) { /* AUGMENT */
+					r = residual_capacity(net); 
+					an_flow += r;
+					p = path_new();
+					augment(net, p, r);
+					out_add_path(p, out);
+				} 
+				else break;
+			}
 
-			if (x == t) { /* AUGMENT */
-				r = residual_capacity(net); 
-				an_flow += r;
-				p = path_new();
-				augment(net, p, r);
-				out_add_path(p, out);
-			} 
-		}
-
-		if((flags & VERBOSE) && !end){
-			print_paths(out, flags, i+1);
+			if((flags & VERBOSE)){
+				print_paths(out, flags, i+1);
+			}
 		}
 
 		out_path_destroy(out);
@@ -270,16 +307,15 @@ int main(int argc, char ** argv)
 	char * file_name = "net02.txt";
 
 	flags = check_options(argc, argv);
+
 	network = read_data(file_name);
+
 	out = out_new();
 
-	if (network == NULL){
-		printf("invalid input\n");
-		return -1;
-	}
-
 	dinic(network, &out, flags);
+
 	print_output(out,flags);
+
 	out_destroy(out);
 	net_destroy(network);
 
