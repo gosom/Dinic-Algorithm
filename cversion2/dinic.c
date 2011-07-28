@@ -299,25 +299,3 @@ int check_options(int argc, char **argv)
 	return flags;
 }
 
-int main(int argc, char ** argv)
-{
-	Net network = NULL;
-	int flags = 0;
-	output out = NULL;
-	char * file_name = NULL;
-
-	flags = check_options(argc, argv);
-
-	network = read_data(file_name);
-
-	out = out_new();
-
-	dinic(network, &out, flags);
-
-	out_print(out,flags);
-
-	out_destroy(out);
-	net_destroy(network);
-
-	return 0;
-}

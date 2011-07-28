@@ -1,4 +1,4 @@
-SOURCES=dinic.c queue_bfs.c node.c edge.c path.c network.c output.c
+SOURCES=main.c queue_bfs.c node.c edge.c path.c network.c output.c dinic.c
 LIBS=
 TARGET=dinic
 CC=gcc
