@@ -13,13 +13,14 @@
 
 /**
  * @mainpage Implementacion del algoritmo de Dinic para el problema 
- * de maxflow-mincut.
+de maxflow-mincut.
 
- * @section usage Uso
- * @subsection args Argumentos
- *   - -f --flujo      Imprime una tabla con los valores del flujo.
+ * @section usage Usage
+ * dinic [options]
+ * @subsection args Options
+ *   - -f --flujo      Imprime tabla con los valores del flujo.
  *   - -v --verbose    Imprime los caminos en cada network auxiliar.
- *   - -c --corte      Se muestra el corte al finalizar.
+ *   - -c --corte      Imprime el corte minimal encontrado.
  *
  *
  * @subsection input Entrada
@@ -33,7 +34,9 @@
  * El programa lee el input hasta que se viola el formato.
  * 
  * A, B y C son enteros sin signo.
- *
+ * 
+ * El nodo fuente (Source) debe ser representado por 0.
+ * El nodo destino (Target) debe ser representado por 1. 
  *
  * @section authors Autor
  *  - Marcio Diaz

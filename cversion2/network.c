@@ -4,6 +4,10 @@
 #include "network.h"
 #include "queue_bfs.h"
 
+/**
+ * Estructura que contiene toda la informacion del network.
+ */
+
 struct net {
 	nodes_list nodes;
 	edges_list edges;

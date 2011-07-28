@@ -6,8 +6,13 @@ CFLAGS=-ansi -Wall -pedantic
 OBJECTS=$(SOURCES:.c=.o)
 
 all: $(TARGET)
+
 clean:
 	rm -f $(TARGET) $(OBJECTS) .depend
+
+docs:
+	doxygen Doxyfile
+
 
 -include .depend
 
@@ -16,3 +21,4 @@ clean:
 
 $(TARGET): $(OBJECTS) $(LIBS)
 	$(CC) -o $@ $^
+

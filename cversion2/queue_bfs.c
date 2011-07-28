@@ -3,6 +3,9 @@
 
 typedef struct bfs_elem bfs_elem;
 
+/**
+ * Estructura que representa un nodo en la cola bfs.
+ */
 
 struct bfs_elem{
 	uint id;
