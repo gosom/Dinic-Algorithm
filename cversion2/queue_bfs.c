@@ -22,7 +22,7 @@ struct queue_bfs{
 
 
 /**
- * Crea una nueva cola con capacidad para @n nodes.
+ * Crea una nueva cola con capacidad para n nodos.
  * @param n La maxima cantidad de nodos que se guardaran en la cola.
  * @returns La cola creada.
  */
@@ -42,7 +42,7 @@ queue_bfs queue_bfs_new(uint n) {
 }
 
 /**
- * Agrega el nodo @n a la cola.
+ * Agrega el nodo n a la cola.
  * @warning La cola NO debe estar llena.
  * @param q La cola donde agregamos el nodo.
  */

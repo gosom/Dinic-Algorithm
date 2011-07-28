@@ -31,10 +31,10 @@ uint out_num_paths(output out) {
 }
 
 /**
- * Devuelve el @i-esimo camino guardado en out.
+ * Devuelve el i-esimo camino guardado en out.
  * @param out Salida.
  * @param i Indice del camino.
- * @returns El @i-esimo camino.
+ * @returns El i-esimo camino.
  */
 
 path out_get_path(output out, uint i) {
@@ -85,102 +85,6 @@ void out_add_path(output out, path p){
 	out->flow += path_flow(p);
 }
 
-/**
- * Imprime el valor del flujo, dependiendo de los flags imprime 
- * tambien el flujo de los lados y/o el corte.
- * @param out Salida.
- * @param flags Opciones de impresion.
- */
-
-void out_print(output out, int flags){
-	
-	if ((flags&FLUJO))
-		net_print_flow_table(out->net);
-
-	printf("Valor del Flujo: %i\n", out->flow);
-
-	if ((flags&CORTE))
-		out_print_cut(out);
-}
-
-/**
- * Crea una nueva estructura para guardar los datos de impresion.
- * @returns La nueva estructura output creada.
- */
-
-output out_new(){
-	output out;
-	out = calloc(1,sizeof(struct output));
-	assert(out != NULL);
-	
-	return out;
-}
-
-
-/**
- * Destruye la estructura output y libera la memoria asignada.
- * @param out La estructura a destruir.
- */
-
-void out_destroy(output out) {
-	out_path_destroy(out);
-	free(out->paths);
-	free(out);
-}
-
-/**
- * Destruye la lista de caminos que guarda la estructura output.
- * @param out La estructura output.
- */
-
-void out_path_destroy(output out){
-	uint i;
-
-	assert(out != NULL);
-	
-  	for(i = 0; i < out->n_paths; i++) {
-		path_destroy(out->paths[i]);
-		
-	}
-	free(out->paths);
-  	out->paths = NULL;
-  	out->n_paths = 0;
-}
-
-/**
- * Guarda un puntero al network dentro de @out.
- * @param out La estructura de salida.
- * @param net El network.
- */
-
-void out_set_net(output out, Net net) {
-	out->net = net;
-}
-
-/**
- * Guarda el flujo en la estructura @out.
- * @param out La estructura de impresion.
- * @param flow El flujo a guardar.
- */
-
-void out_set_flow(output out, uint flow) {
-	assert(out != NULL);
-	
-	out->flow = flow;
-}
-
-/**
- * Devuelve el flujo guardado en la estructura.
- * @param out La estructura de impresion.
- * @returns El flujo guardado.
- */
-
-uint out_get_flow(output out) {
-	assert(out != NULL);
-	
-	return out->flow;
-}
-
 
 /**
  * Imprime el corte del network.
@@ -223,3 +127,103 @@ void out_print_cut(output out) {
 
 	queue_bfs_destroy(q);
 }
+
+
+/**
+ * Imprime el valor del flujo, dependiendo de los flags imprime 
+ * tambien el flujo de los lados y/o el corte.
+ * @param out Salida.
+ * @param flags Opciones de impresion.
+ */
+
+void out_print(output out, int flags){
+	
+	if ((flags&FLUJO))
+		net_print_flow_table(out->net);
+
+	printf("Valor del Flujo: %i\n", out->flow);
+
+	if ((flags&CORTE))
+		out_print_cut(out);
+}
+
+/**
+ * Crea una nueva estructura para guardar los datos de impresion.
+ * @returns La nueva estructura output creada.
+ */
+
+output out_new(){
+	output out;
+	out = calloc(1,sizeof(struct output));
+	assert(out != NULL);
+	
+	return out;
+}
+
+
+/**
+ * Destruye la lista de caminos que guarda la estructura output.
+ * @param out La estructura output.
+ */
+
+void out_path_destroy(output out){
+	uint i;
+
+	assert(out != NULL);
+	
+  	for(i = 0; i < out->n_paths; i++) {
+		path_destroy(out->paths[i]);
+		
+	}
+	free(out->paths);
+  	out->paths = NULL;
+  	out->n_paths = 0;
+}
+
+
+
+/**
+ * Destruye la estructura output y libera la memoria asignada.
+ * @param out La estructura a destruir.
+ */
+
+void out_destroy(output out) {
+	out_path_destroy(out);
+	free(out->paths);
+	free(out);
+}
+
+/**
+ * Guarda un puntero al network dentro de out.
+ * @param out La estructura de salida.
+ * @param net El network.
+ */
+
+void out_set_net(output out, Net net) {
+	out->net = net;
+}
+
+/**
+ * Guarda el flujo en la estructura out.
+ * @param out La estructura de impresion.
+ * @param flow El flujo a guardar.
+ */
+
+void out_set_flow(output out, uint flow) {
+	assert(out != NULL);
+	
+	out->flow = flow;
+}
+
+/**
+ * Devuelve el flujo guardado en la estructura.
+ * @param out La estructura de impresion.
+ * @returns El flujo guardado.
+ */
+
+uint out_get_flow(output out) {
+	assert(out != NULL);
+	
+	return out->flow;
+}
+

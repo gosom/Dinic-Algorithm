@@ -59,10 +59,10 @@ bool node_get_balance(node n) {
 }
 
 /**
- * Devuelve el @i-esimo nodo de la lista.
+ * Devuelve el i-esimo nodo de la lista.
  * @param nodes Lista de nodos.
  * @param i Indice del nodo que queremos obtener.
- * @returns Nodo @i-esimo. 
+ * @returns Nodo i-esimo. 
  * @warning El nodo debe existir en la lista.
  */
 
@@ -103,7 +103,7 @@ uint nodes_back_get_length(nodes_list nodes, uint i) {
 }
 
 /**
- * Obtiene el Nombre del nodo cuyo indice es @i.
+ * Obtiene el Nombre del nodo cuyo indice es i.
  * @param nodes Lista de nodos.
  * @param i Indice del nodo.
  * @returns Nombre del nodo.
@@ -117,7 +117,7 @@ uint nodes_get_id(nodes_list nodes, uint i) {
 }
 
 /**
- * Modifica el nombre del @i-esimo nodo de la lista a @id.
+ * Modifica el nombre del i-esimo nodo de la lista a id.
  * @param nodes Lista de nodos.
  * @param i Indice del nodo en la lista.
  * @param id Nuevo nombre del nodo.
@@ -143,7 +143,7 @@ uint nodes_get_length(nodes_list nodes) {
 }
 
 /**
- * Modifica el balance del @i-esimo nodo de la lista.
+ * Modifica el balance del i-esimo nodo de la lista.
  * @param nodes La lista de nodos.
  * @param i El indice del nodo cuyo balance queremos modificar.
  * @param balance True si queremos que tenga balance forward, False
@@ -159,7 +159,7 @@ void nodes_set_balance(nodes_list nodes, uint i,
 }
 
 /**
- * Devuelve el balance del @i-esimo nodo de la lista.
+ * Devuelve el balance del i-esimo nodo de la lista.
  * @param nodes La lista de nodos.
  * @param Indice del nodo.
  * @returns True si el balance es forward, false de lo contrario.
@@ -173,7 +173,7 @@ bool nodes_get_balance(nodes_list nodes, uint i) {
 }
 
 /**
- * Modifica el antecesor del @i-esimo nodo.
+ * Modifica el antecesor del i-esimo nodo.
  * @param nodes Lista de nodos.
  * @param i Indice del nodo en la lista.
  * @param ancestor Nuevo ancestro del nodo.
@@ -188,10 +188,10 @@ void nodes_set_ancestor(nodes_list nodes, uint i,
 }
 
 /**
- * Devuelve el antecesor del @i-esimo nodo.
+ * Devuelve el antecesor del i-esimo nodo.
  * @param nodes Lista de nodos.
  * @param i Indice del nodo.
- * @returns El indice del ancestro de @i.
+ * @returns El indice del ancestro de i.
  */
 
 uint nodes_get_ancestor(nodes_list nodes, uint i) {
@@ -202,7 +202,7 @@ uint nodes_get_ancestor(nodes_list nodes, uint i) {
 }
 
 /**
- * Modifica el nivel del @i-esimo nodo de la lista.
+ * Modifica el nivel del i-esimo nodo de la lista.
  * @param nodes Lista de nodos.
  * @param i Indice del nodo.
  * @param level Nuevo nivel del nodo.
@@ -216,10 +216,10 @@ void nodes_set_level(nodes_list nodes, uint i, uint level) {
 }
 
 /**
- * Devuelve el nivel del @i-esimo nodo de la lista.
+ * Devuelve el nivel del i-esimo nodo de la lista.
  * @param nodes La lista de nodos.
  * @param i Indice del nodo.
- * @returns El nivel del @i-esimo nodo.
+ * @returns El nivel del i-esimo nodo.
  */
 
 uint nodes_get_level(nodes_list nodes, uint i) {
@@ -312,7 +312,7 @@ void nodes_destroy(nodes_list n) {
 }
 
 /**
- * Aumenta la capacidad del la lista de nodos a @size nodos.
+ * Aumenta la capacidad del la lista de nodos a size nodos.
  * @param n Lista de nodos.
  * @param size Nueva capacidad de la lista.
  * @warning La nueva capacidad debe ser mayor a la capacidad anterior.
@@ -336,7 +336,7 @@ void nodes_realloc(nodes_list n, uint size) {
 }
 
 /**
- * Agrega un nodo cuyo nombre es @id a la lista de nodos.
+ * Agrega un nodo cuyo nombre es id a la lista de nodos.
  * @param n La lista de nodos.
  * @param id El nombre del nodo que queremos agregar.
  * @returns El indice del nodo agregado.
@@ -479,11 +479,11 @@ uint nodes_back_get_start(nodes_list n, uint x) {
 }
 
 /**
- * Devuelve el @i-esimo vecino forward del nodo.
+ * Devuelve el i-esimo vecino forward del nodo.
  * @param n Lista de nodos.
  * @param x Indice del nodo.
  * @param i Indice del vecino forward del nodo.
- * @returns Indice del  @i-esimo vecino forward del nodo.
+ * @returns Indice del  i-esimo vecino forward del nodo.
  */
 
 uint nodes_nth_forw_neighb(nodes_list n, uint x, uint i) {
@@ -494,11 +494,11 @@ uint nodes_nth_forw_neighb(nodes_list n, uint x, uint i) {
 }
 
 /**
- * Devuelve el @i-esimo vecino backward del nodo.
+ * Devuelve el i-esimo vecino backward del nodo.
  * @param n Lista de nodos.
  * @param x Indice del nodo.
  * @param i Indice del vecino backward del nodo.
- * @returns Indice del  @i-esimo vecino backward del nodo.
+ * @returns Indice del  i-esimo vecino backward del nodo.
  */
 
 uint nodes_nth_back_neighb(nodes_list n, uint x, uint i) {

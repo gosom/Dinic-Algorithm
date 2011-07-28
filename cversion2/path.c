@@ -56,7 +56,7 @@ void path_destroy(path p){
 }
 
 /**
- * Agrega un nodo al camino con balance @b.
+ * Agrega un nodo al camino con balance b.
  * @param p El camino.
  * @param i El ID del nodo a agregar.
  * @param b Balance del nodo, true si es forward, 
@@ -112,11 +112,11 @@ void path_update_flow(path p, uint flow) {
 }
 
 /**
- * Devuelve el ID del nodo @i-esimo en el camino.
+ * Devuelve el ID del nodo i-esimo en el camino.
  * @param p El camino.
  * @param i La posicion del nodo en el camino cuyo ID queremos obtener.
- * @warning La longitud del camino debe ser mayor a @i.
- * @returns El id del nodo en la posicion @i.
+ * @warning La longitud del camino debe ser mayor a i.
+ * @returns El id del nodo en la posicion i.
  */
 
 uint path_nth_name(path p, uint i) {
@@ -127,11 +127,11 @@ uint path_nth_name(path p, uint i) {
 }
 
 /**
- * Devuelve el balance del @i-esimo nodo del camino.
+ * Devuelve el balance del i-esimo nodo del camino.
  * @param p El camino.
  * @param i La posicion del nodo.
- * @warning La longitud del camino debe ser mayor a @i.
- * @returns True si el @i-esimo nodo del camino es forward, False si
+ * @warning La longitud del camino debe ser mayor a i.
+ * @returns True si el i-esimo nodo del camino es forward, False si
  * el nodo es backward.
  */
 

@@ -20,9 +20,9 @@ nodes_list net_get_nodes(Net net) {
 }
 
 /**
- * Obtiene la lista de nodos del network.
+ * Obtiene la lista de lados del network.
  * @param net El network.
- * @returns La lista de nodos.
+ * @returns La lista de lados.
  */
 
 edges_list net_get_edges(Net net) {
@@ -71,7 +71,7 @@ void net_destroy(Net net){
 
 
 /**
- * Devuelve el indice de un vecino forward de @x que aun no ha sido
+ * Devuelve el indice de un vecino forward de x que aun no ha sido
  * agregado al network auxiliar y por el cual podemos aumentar mandar
  * flujo.
  * @param net El network.
@@ -105,7 +105,7 @@ uint net_neighb_forw(Net net, uint x){
 
 
 /**
- * Devuelve el indice de un vecino backward de @x que aun no ha sido
+ * Devuelve el indice de un vecino backward de x que aun no ha sido
  * agregado al network auxiliar y por el cual podemos aumentar mandar
  * flujo.
  * @param net El network.
@@ -269,15 +269,13 @@ void net_add_edge(Net network, uint x,uint y, uint C){
 
 
 /**
- * Agrega los vecinos de @in a la cola y al network auxiliar.
+ * Agrega los vecinos de in a la cola y al network auxiliar.
  * @param net El network.
  * @param Qq Puntero a la cola donde agregamos los vecinos.
  * @param in Indice del nodo cuyos vecinos queremos agregar.
  */
 
-void net_queue_bfs_add_neighbs(Net net,
-							   queue_bfs *Qq, 
-							   uint in){
+void net_queue_bfs_add_neighbs(Net net, queue_bfs *Qq, uint in){
 	uint i, k, j, max;
 
 	j = 0;
