@@ -190,7 +190,9 @@ void net_print_flow_table(Net net) {
 		for (i = 0; i<nodes_forw_get_length(nodes, x); 
 			 i++){
 			y = nodes_nth_forw_neighb(nodes, x, i);
-			printf("%u\t%u\t%u (%u)\n", x, y,
+			printf("%u\t%u\t%u (%u)\n", 
+				   nodes_get_id(nodes, x), 
+				   nodes_get_id(nodes, y),
 				   edges_flow(edges, x, y),
 				   edges_capacity(edges, x, y));
 		}

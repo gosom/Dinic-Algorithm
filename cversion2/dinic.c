@@ -304,7 +304,7 @@ int main(int argc, char ** argv)
 	Net network = NULL;
 	int flags = 0;
 	output out = NULL;
-	char * file_name = "net02.txt";
+	char * file_name = NULL;
 
 	flags = check_options(argc, argv);
 

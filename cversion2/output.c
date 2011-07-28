@@ -97,7 +97,7 @@ void out_print(output out, int flags){
 	if ((flags&FLUJO))
 		net_print_flow_table(out->net);
 
-	printf("Valor del flow: %i\n", out->flow);
+	printf("Valor del Flujo: %i\n", out->flow);
 
 	if ((flags&CORTE))
 		out_print_cut(out);
@@ -205,15 +205,15 @@ void out_print_cut(output out) {
 
 	q = net_queue_bfs_new(net);
 	
-	printf("Cut={");
+	printf("Corte: {");
 
 	do {
 		x = queue_bfs_pop(q);
     
 		if (x)
-			printf(", %u", x);
+			printf(", %u", nodes_get_id(nodes, x));
 		else
-			printf("%u", x);
+			printf("%u", nodes_get_id(nodes, x));
 
 		net_queue_bfs_add_neighbs(net, &q, x);
     
