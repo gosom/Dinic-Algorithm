@@ -13,12 +13,12 @@
 
 struct node{
 	uint level; 
-	uint ancestor:14;
+	uint ancestor;
 	bool balance; 
-	uint n_neighbs_forw:14;
-	uint n_neighbs_back:14;
-	uint n_start_forw:14; 
-	uint n_start_back:14;
+	uint n_neighbs_forw;
+	uint n_neighbs_back;
+	uint n_start_forw; 
+	uint n_start_back;
 	uint *neighbs_forw; 
 	uint *neighbs_back; 
 };

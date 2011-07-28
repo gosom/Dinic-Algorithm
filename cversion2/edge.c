@@ -9,10 +9,10 @@
  */
 
 struct edge{
-	uint x:14;
-	uint y:14;
-	uint c:31;
-	uint f:31;
+	uint x;
+	uint y;
+	uint c;
+	uint f;
 };
 
 

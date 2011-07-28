@@ -7,7 +7,7 @@
 
 struct snode {
 	bool balance;
-	uint name:15;
+	uint name;
 };
 
 
@@ -16,8 +16,8 @@ struct snode {
  */
 
 struct path {
-	uint flow:31;
-	uint n_nodes:17;
+	uint flow;
+	uint n_nodes;
 	snode *nodes;
 };
 

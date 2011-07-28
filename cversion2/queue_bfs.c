@@ -5,7 +5,7 @@ typedef struct bfs_elem bfs_elem;
 
 
 struct bfs_elem{
-	uint id:16;
+	uint id;
 };
 
 
